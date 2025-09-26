@@ -32,6 +32,12 @@ flake8 = ">=7.0.0"
 mypy = ">=1.9.0"
 ruff = "0.13.1"
 
+[tool.poetry.group.dev]
+include-groups = [
+    "test",
+    "lint",
+]
+
 [tool.poetry.scripts]
 bot = "bot.bot:main"
 admin = "admin.admin:app"
