@@ -4,17 +4,17 @@ from aiogram.types import Message
 import sys
 from pathlib import Path
 from dotenv import load_dotenv
-import os
+from decouple import config
 sys.path.append(str(Path(__file__).parent.parent))
 
 load_dotenv()
 
-bot = Bot(token=os.getenv("BOT_TOKEN"))
+bot = Bot(token=config('TOKEN'))
 dp = Dispatcher()
 
 
 @dp.message()
-async def echo_message(message: Message):    
+async def echo_message(message: Message):
     await message.answer(f"Вы написали: {message.text}")
 
 

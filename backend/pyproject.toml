@@ -1,0 +1,41 @@
+[tool.poetry]
+name = "ihearyou"
+version = "0.1.0"
+description = "Telegram bot with admin panel"
+authors = ["Aleksandr Bynkov <bixber.commercial@yandex.ru>"]
+readme = "README.md"
+license = "MIT"
+package-mode = false
+keywords = ["telegram", "bot", "fastapi", "admin"]
+
+[tool.poetry.urls]
+"Issues" = "https://github.com/Yandex-Hackaton/ihearyou/issues"
+"Pull Requests" = "https://github.com/Yandex-Hackaton/ihearyou/pulls"
+
+[tool.poetry.dependencies]
+python = ">=3.12.0,<4.0"
+aiogram = "3.2.0"
+sqlmodel = "0.0.14"
+fastapi = "0.104.0"
+uvicorn = "0.24.0"
+sqlalchemy = "2.0.23"
+sqladmin = "0.21.0"
+python-dotenv = ">=1.0.0"
+python-decouple = "^3.8"
+asyncpg = "^0.30.0"
+
+[tool.poetry.group.test.dependencies]
+pytest = ">=7.0.0"
+
+[tool.poetry.group.lint.dependencies]
+flake8 = ">=7.0.0"
+mypy = ">=1.9.0"
+ruff = "0.13.1"
+
+[tool.poetry.scripts]
+bot = "bot.bot:main"
+admin = "admin.admin:app"
+
+[build-system]
+requires = ["poetry-core>=2.0.0,<3.0.0"]
+build-backend = "poetry.core.masonry.api"
