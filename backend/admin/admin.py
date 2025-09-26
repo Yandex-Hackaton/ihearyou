@@ -2,15 +2,15 @@ from fastapi import FastAPI
 from sqlmodel import SQLModel, create_engine
 from sqladmin import Admin, ModelView
 from admin.models import User
-import os
 from dotenv import load_dotenv
+from decouple import config
 
 load_dotenv()
 
-DATABASE_URL: str = os.getenv("DATABASE_URL", "postgresql://ihearyou:ihearyou_password@localhost:5432/ihearyou")
+DATABASE_URL: str = config('DB_CONNECTION_STRING')
 
 engine = create_engine(
-    DATABASE_URL, 
+    DATABASE_URL,
     echo=True,
     pool_pre_ping=True,
     pool_recycle=300,
