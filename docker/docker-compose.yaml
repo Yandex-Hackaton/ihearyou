@@ -1,52 +1,16 @@
+# Base file for multiple compose files.
+# for dev: "compose up" will auto-use compose.override.yml also
+# for production: "docker compose -f compose.yml -f compose.prod.yml up"
+# i.e. ignore compose.override.yml in production.
+
 services:
-  postgres:
-    image: postgres:15-alpine
-    container_name: ihearyou_postgres
-    environment:
-      POSTGRES_DB: ihearyou
-      POSTGRES_USER: ihearyou
-      POSTGRES_PASSWORD: ihearyou_password
+  db:
+    image: postgres:16.3-alpine3.19
+    restart: unless-stopped
+    env_file: ../.env
     volumes:
-      - postgres_data:/var/lib/postgresql/data
+      - pg_data:/var/lib/postgresql/data
     ports:
-      - "5432:5432"
-    healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U ihearyou -d ihearyou"]
-      interval: 10s
-      timeout: 5s
-      retries: 5
-
-  admin:
-    build:
-      context: ..
-      dockerfile: docker/dockerfile
-    container_name: ihearyou_admin
-    environment:
-      DATABASE_URL: postgresql://ihearyou:ihearyou_password@postgres:5432/ihearyou
-      BOT_TOKEN: ${BOT_TOKEN}
-    ports:
-      - "8000:8000"
-    depends_on:
-      postgres:
-        condition: service_healthy
-    volumes:
-      - ..:/app
-    command: ["uvicorn", "admin.admin:app", "--host", "0.0.0.0", "--port", "8000", "--reload"]
-
-  bot:
-    build:
-      context: ..
-      dockerfile: docker/dockerfile
-    container_name: ihearyou_bot
-    environment:
-      DATABASE_URL: postgresql://ihearyou:ihearyou_password@postgres:5432/ihearyou
-      BOT_TOKEN: ${BOT_TOKEN}
-    depends_on:
-      postgres:
-        condition: service_healthy
-    volumes:
-      - ..:/app
-    command: ["python", "-m", "bot.bot"]
-
+      - ${DB_PORT:-5432}:5432
 volumes:
-  postgres_data:
+  pg_data:
