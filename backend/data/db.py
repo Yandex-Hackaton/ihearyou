@@ -1,24 +1,19 @@
-from sqlmodel import SQLModel, create_engine
+import asyncio
+from sqlmodel import SQLModel
 from decouple import config
-
+from sqlalchemy.ext.asyncio import create_async_engine
 from models import User, Role, Button, Category
 
 
-sqlite_file_name = config('DB_NAME')
-sqlite_url = f"sqlite:///{sqlite_file_name}"
-
-engine = create_engine(
-    sqlite_url,
-    echo=True,
-    pool_pre_ping=True,
-    pool_recycle=300,
-    connect_args={'check_same_thread': False},
-)
+postgres_url = config('POSTGRES_CONN_STRING')
 
 
-def create_db_and_tables():
-    SQLModel.metadata.create_all(engine)
+# Функция для первичного создания всех таблиц в Postgres контейнере Docker
+async def main():
+    engine = create_async_engine(postgres_url)
+    async with engine.begin() as conn:
+        await conn.run_sync(SQLModel.metadata.create_all)
 
 
 if __name__ == "__main__":
-    create_db_and_tables()
+    asyncio.run(main())

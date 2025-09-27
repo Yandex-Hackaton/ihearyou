@@ -1,8 +1,9 @@
 from fastapi import FastAPI
 from sqladmin import Admin, ModelView
 from sqladmin.filters import ForeignKeyFilter
-from models import User, Button, Category, Role
+from passlib.context import CryptContext
 
+from models import User, Button, Category, Role
 from db import create_db_and_tables, engine
 
 
@@ -35,10 +36,21 @@ class UserAdmin(ModelView, model=User):
         User.role_id: 'Роль',
         'full_name': 'Полное имя',
     }
-    pk_columns = [User.role_id]
     column_searchable_list = [User.username, User.name, User.surname]
     column_sortable_list = [User.id, User.username, User.birth_date]
-    icon = "fa-solid fa-user"
+    form_edit_rules = [
+        'name',
+        'surname',
+        'patronymic',
+        'birth_date',
+        'role',
+    ]
+    icon = 'fa-solid fa-user'
+
+    async def on_model_change(self, data, model, is_created, request) -> None:
+        if is_created:
+            pwd_context = CryptContext(schemes=['bcrypt'], deprecated='auto')
+            data['password'] = pwd_context.hash(data['password'])
 
 
 class ButtonAdmin(ModelView, model=Button):
