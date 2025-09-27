@@ -23,6 +23,8 @@ sqladmin = "0.21.0"
 python-dotenv = ">=1.0.0"
 python-decouple = "^3.8"
 asyncpg = "^0.30.0"
+passlib = "^1.7.4"
+bcrypt = "4.3.0"
 
 [tool.poetry.group.test.dependencies]
 pytest = ">=7.0.0"
@@ -31,12 +33,6 @@ pytest = ">=7.0.0"
 flake8 = ">=7.0.0"
 mypy = ">=1.9.0"
 ruff = "0.13.1"
-
-[tool.poetry.group.dev]
-include-groups = [
-    "test",
-    "lint",
-]
 
 [tool.poetry.scripts]
 bot = "bot.bot:main"

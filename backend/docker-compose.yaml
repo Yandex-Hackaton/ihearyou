@@ -4,14 +4,14 @@ services:
     container_name: ihearyou_postgres
     environment:
       POSTGRES_DB: ihearyou
-      POSTGRES_USER: ihearyou
+      POSTGRES_USER: ihearyou_user
       POSTGRES_PASSWORD: ihearyou_password
     volumes:
       - postgres_data:/var/lib/postgresql/data
     ports:
       - "5432:5432"
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U ihearyou -d ihearyou"]
+      test: ["CMD-SHELL", "pg_isready -U ihearyou_user -d ihearyou"]
       interval: 10s
       timeout: 5s
       retries: 5
@@ -22,7 +22,7 @@ services:
       dockerfile: docker/dockerfile
     container_name: ihearyou_admin
     environment:
-      DATABASE_URL: postgresql://ihearyou:ihearyou_password@postgres:5432/ihearyou
+      DATABASE_URL: postgresql://ihearyou_user:ihearyou_password@postgres:5432/ihearyou
       BOT_TOKEN: ${BOT_TOKEN}
     ports:
       - "8000:8000"
@@ -31,7 +31,7 @@ services:
         condition: service_healthy
     volumes:
       - ..:/app
-    command: ["uvicorn", "admin.admin:app", "--host", "0.0.0.0", "--port", "8000", "--reload"]
+    command: ["uvicorn", "data.admin_panel:app", "--host", "0.0.0.0", "--port", "8000", "--reload"]
 
   bot:
     build:
@@ -39,7 +39,7 @@ services:
       dockerfile: docker/dockerfile
     container_name: ihearyou_bot
     environment:
-      DATABASE_URL: postgresql://ihearyou:ihearyou_password@postgres:5432/ihearyou
+      DATABASE_URL: postgresql://ihearyou_user:ihearyou_password@postgres:5432/ihearyou
       BOT_TOKEN: ${BOT_TOKEN}
     depends_on:
       postgres:

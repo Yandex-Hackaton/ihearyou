@@ -23,4 +23,4 @@ RUN poetry install
 # Run your app
 COPY . /app
 
-CMD ["python", "bot.py"]
+CMD ["python", "admin_panel.py"]
