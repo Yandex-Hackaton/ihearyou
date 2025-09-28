@@ -7,18 +7,20 @@ from passlib.context import CryptContext
 from .models import User, Button, Category, Role
 from .db import engine, create_db_and_tables
 
+
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     await create_db_and_tables()
     yield
 
 app = FastAPI(
-    title="IHearYou Admin Panel", 
+    title="IHearYou Admin Panel",
     version="1.0.0",
-    lifespan=lifespan
+    lifespan=lifespan,
 )
 
 admin = Admin(app, engine, title="Управление IHearYou Ботом")
+
 
 class UserAdmin(ModelView, model=User):
     name = 'Пользователь'
@@ -58,6 +60,7 @@ class UserAdmin(ModelView, model=User):
             pwd_context = CryptContext(schemes=['bcrypt'], deprecated='auto')
             data['password'] = pwd_context.hash(data['password'])
 
+
 class ButtonAdmin(ModelView, model=Button):
     name = 'Кнопка'
     name_plural = 'Кнопки'
@@ -80,6 +83,7 @@ class ButtonAdmin(ModelView, model=Button):
     column_searchable_list = [Button.title, Button.category]
     column_sortable_list = [Button.title, Button.category]
 
+
 class CategoryAdmin(ModelView, model=Category):
     name = 'Категория'
     name_plural = 'Категории'
@@ -100,6 +104,7 @@ class CategoryAdmin(ModelView, model=Category):
         Category.for_user_role,
     ]
 
+
 class RoleAdmin(ModelView, model=Role):
     name = 'Роль'
     name_plural = 'Роли'
@@ -114,6 +119,7 @@ class RoleAdmin(ModelView, model=Role):
     }
     column_searchable_list = [Role.slug, Role.title]
     column_sortable_list = [Role.title, Role.slug, Role.categories]
+
 
 admin.add_view(UserAdmin)
 admin.add_view(ButtonAdmin)
