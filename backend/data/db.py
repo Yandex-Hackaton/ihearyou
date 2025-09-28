@@ -1,9 +1,11 @@
 import asyncio
 from sqlmodel import SQLModel
-from decouple import config
 from sqlalchemy.ext.asyncio import create_async_engine, AsyncSession
 from sqlalchemy.orm import sessionmaker
+from decouple import Config, RepositoryEnv
 
+
+config = Config(RepositoryEnv('.env.dev'))
 
 postgres_url = config("POSTGRES_CONN_STRING")
 
