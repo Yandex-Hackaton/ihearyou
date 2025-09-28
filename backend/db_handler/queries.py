@@ -1,12 +1,24 @@
 from sqlalchemy.future import select
 from sqlalchemy.ext.asyncio import AsyncSession
-from typing import list
+from typing import List, Optional
 
 from data.models import Role, Category, Button
 
 
+async def get_category_by_id(category_id: int, session: AsyncSession) -> Optional[Category]:
+    query = select(Category).where(Category.id == category_id)
+    result = await session.execute(query)
+    return result.scalar_one_or_none()
+
+
+async def get_button_by_id(button_id: int, session: AsyncSession) -> Optional[Button]:
+    query = select(Button).where(Button.id == button_id)
+    result = await session.execute(query)
+    return result.scalar_one_or_none()
+
+
 async def get_menu_buttons_title(user_role_slug: str,
-                                 session: AsyncSession) -> list[str]:
+                                 session: AsyncSession) -> List[str]:
     """
     Получает названия кнопок меню для конкретной роли пользователя.
     """

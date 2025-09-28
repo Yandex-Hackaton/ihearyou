@@ -37,7 +37,7 @@ class Button(SQLModel, table=True):
         default=None,
         primary_key=True,
     )
-    title: str = Field(unique=True, index=True)
+    title: str = Field(index=True)
     description: Optional[str] = Field(unique=True)
     content: Optional[str]
 

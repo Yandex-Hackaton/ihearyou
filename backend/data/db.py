@@ -17,19 +17,10 @@ async def create_db_and_tables():
     print("Таблицы созданы успешно!")
 
 
-async def init_db_with_test_data():
-    """Инициализация базы данных с созданием таблиц и тестовых данных"""
-    from .seed_data import create_test_data
-    
-    await create_db_and_tables()
-    
-    await create_test_data()
-
-
 async def get_session():
     async with async_session() as session:
         yield session
 
 
 if __name__ == "__main__":
-    asyncio.run(init_db_with_test_data())
+    asyncio.run(create_db_and_tables())

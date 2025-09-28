@@ -12,6 +12,6 @@ logging.basicConfig(
 )
 logger = logging.getLogger(__name__)
 
-bot = Bot(token=config('TOKEN'))
+bot = Bot(token=config('BOT_TOKEN'))
 
 dp = Dispatcher(storage=MemoryStorage())

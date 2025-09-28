@@ -2,7 +2,6 @@ import asyncio
 from create_bot import bot, dp
 from handlers.start import start_router
 from handlers.callbacks import callback_router
-from data.db import init_db_with_test_data
 # from work_time.time_func import send_time_msg
 
 async def main():
