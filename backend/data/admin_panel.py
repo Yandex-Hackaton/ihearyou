@@ -1,18 +1,24 @@
+from contextlib import asynccontextmanager
 from fastapi import FastAPI
 from sqladmin import Admin, ModelView
 from sqladmin.filters import ForeignKeyFilter
 from passlib.context import CryptContext
 
-from models import User, Button, Category, Role
-from db import create_db_and_tables, engine
+from .models import User, Button, Category, Role
+from .db import engine, create_db_and_tables
 
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    await create_db_and_tables()
+    yield
 
-create_db_and_tables()
+app = FastAPI(
+    title="IHearYou Admin Panel", 
+    version="1.0.0",
+    lifespan=lifespan
+)
 
-app = FastAPI(title="Telegram Bot Admin Panel", version="1.0.0")
-
-admin = Admin(app, engine, title="Управление Telegram Ботом")
-
+admin = Admin(app, engine, title="Управление IHearYou Ботом")
 
 class UserAdmin(ModelView, model=User):
     name = 'Пользователь'
@@ -52,7 +58,6 @@ class UserAdmin(ModelView, model=User):
             pwd_context = CryptContext(schemes=['bcrypt'], deprecated='auto')
             data['password'] = pwd_context.hash(data['password'])
 
-
 class ButtonAdmin(ModelView, model=Button):
     name = 'Кнопка'
     name_plural = 'Кнопки'
@@ -75,7 +80,6 @@ class ButtonAdmin(ModelView, model=Button):
     column_searchable_list = [Button.title, Button.category]
     column_sortable_list = [Button.title, Button.category]
 
-
 class CategoryAdmin(ModelView, model=Category):
     name = 'Категория'
     name_plural = 'Категории'
@@ -96,7 +100,6 @@ class CategoryAdmin(ModelView, model=Category):
         Category.for_user_role,
     ]
 
-
 class RoleAdmin(ModelView, model=Role):
     name = 'Роль'
     name_plural = 'Роли'
@@ -112,13 +115,11 @@ class RoleAdmin(ModelView, model=Role):
     column_searchable_list = [Role.slug, Role.title]
     column_sortable_list = [Role.title, Role.slug, Role.categories]
 
-
 admin.add_view(UserAdmin)
 admin.add_view(ButtonAdmin)
 admin.add_view(CategoryAdmin)
 admin.add_view(RoleAdmin)
 
-
 if __name__ == "__main__":
     import uvicorn
-    uvicorn.run(app, host="localhost", port=8000)
+    uvicorn.run(app, host="0.0.0.0", port=8000)
