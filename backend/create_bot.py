@@ -1,7 +1,10 @@
 import logging
 from aiogram import Bot, Dispatcher
 from aiogram.fsm.storage.memory import MemoryStorage
-from decouple import config
+from decouple import Config, RepositoryEnv
+
+
+config = Config(RepositoryEnv('.env.dev'))
 
 
 admins = [int(admin_id) for admin_id in config('ADMINS').split(',')]

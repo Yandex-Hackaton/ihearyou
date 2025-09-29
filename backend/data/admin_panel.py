@@ -1,17 +1,25 @@
+from contextlib import asynccontextmanager
 from fastapi import FastAPI
 from sqladmin import Admin, ModelView
 from sqladmin.filters import ForeignKeyFilter
 from passlib.context import CryptContext
 
-from models import User, Button, Category, Role
-from db import create_db_and_tables, engine
+from .models import User, Button, Category, Role
+from .db import engine, create_db_and_tables
 
 
-create_db_and_tables()
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    await create_db_and_tables()
+    yield
 
-app = FastAPI(title="Telegram Bot Admin Panel", version="1.0.0")
+app = FastAPI(
+    title="IHearYou Admin Panel",
+    version="1.0.0",
+    lifespan=lifespan,
+)
 
-admin = Admin(app, engine, title="Управление Telegram Ботом")
+admin = Admin(app, engine, title="Управление IHearYou Ботом")
 
 
 class UserAdmin(ModelView, model=User):
@@ -118,7 +126,6 @@ admin.add_view(ButtonAdmin)
 admin.add_view(CategoryAdmin)
 admin.add_view(RoleAdmin)
 
-
 if __name__ == "__main__":
     import uvicorn
-    uvicorn.run(app, host="localhost", port=8000)
+    uvicorn.run(app, host="0.0.0.0", port=8000)

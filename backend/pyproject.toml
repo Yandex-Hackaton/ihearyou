@@ -36,7 +36,7 @@ ruff = "0.13.1"
 
 [tool.poetry.scripts]
 bot = "bot.bot:main"
-admin = "admin.admin:app"
+admin = "data.admin_panel:app"
 
 [build-system]
 requires = ["poetry-core>=2.0.0,<3.0.0"]

@@ -1,26 +1,21 @@
 FROM python:3.12.3
 
-# Configure Poetry
+# Poetry config
 ENV POETRY_VERSION=2.2.1
+ENV POETRY_VIRTUALENVS_CREATE=false
 ENV POETRY_HOME=/opt/poetry
-ENV POETRY_VENV=/opt/poetry-venv
 ENV POETRY_CACHE_DIR=/opt/.cache
 
-# Install poetry separated from system interpreter
-RUN python3 -m venv $POETRY_VENV \
-	&& $POETRY_VENV/bin/pip install -U pip setuptools \
-	&& $POETRY_VENV/bin/pip install poetry==${POETRY_VERSION}
-
-# Add `poetry` to PATH
-ENV PATH="${PATH}:${POETRY_VENV}/bin"
+# Install poetry globally
+RUN pip install --no-cache-dir poetry==$POETRY_VERSION
 
 WORKDIR /app
 
 # Install dependencies
 COPY poetry.lock pyproject.toml ./
-RUN poetry install
+RUN poetry install --no-interaction --no-ansi
 
-# Run your app
-COPY . /app
+# Copy project (без .venv — её игнорирует .dockerignore)
+COPY . .
 
 CMD ["python", "admin_panel.py"]
