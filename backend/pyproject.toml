@@ -37,10 +37,6 @@ flake8 = ">=7.0.0"
 mypy = ">=1.9.0"
 ruff = "0.13.1"
 
-[tool.poetry.scripts]
-bot = "bot.bot:main"
-admin = "data.admin_panel:app"
-
 [build-system]
 requires = ["poetry-core>=2.0.0,<3.0.0"]
 build-backend = "poetry.core.masonry.api"

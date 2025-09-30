@@ -1,22 +1,19 @@
 import json
+from contextlib import asynccontextmanager
 from pathlib import Path
-from typing import AsyncGenerator
 
-from sqlmodel import SQLModel
+from sqlmodel import SQLModel, select
 from sqlalchemy.ext.asyncio import create_async_engine, AsyncSession
 from sqlalchemy.orm import sessionmaker
-from sqlalchemy.exc import IntegrityError
-from decouple import Config, RepositoryEnv
+from decouple import config
 
-from .models import Question, User
+from .models import User
 
-
-config = Config(RepositoryEnv('.env.dev'))
-
+# Конфигурация базы данных
 postgres_url = config("POSTGRES_CONN_STRING")
 
-engine = create_async_engine(postgres_url, echo=True)
-
+# Создание движка и сессии
+engine = create_async_engine(postgres_url, echo=False)
 async_session = sessionmaker(
     engine,
     class_=AsyncSession,
@@ -24,18 +21,28 @@ async_session = sessionmaker(
 )
 
 
-async def get_session() -> AsyncGenerator[AsyncSession, None]:
-    async with async_session() as session:
+@asynccontextmanager
+async def get_session():
+    """Контекстный менеджер для работы с сессией базы данных."""
+    session = async_session()
+    try:
         yield session
+        await session.commit()
+    except Exception:
+        await session.rollback()
+        raise
+    finally:
+        await session.close()
 
 
 async def create_db_and_tables():
+    """Создание таблиц в базе данных."""
     async with engine.begin() as conn:
         await conn.run_sync(SQLModel.metadata.create_all)
-    print("Таблицы созданы успешно!")
 
 
 async def load_fixtures(file_name: str):
+    """Загрузка фикстур в базу данных."""
     await create_db_and_tables()
 
     BASE_DIR = Path(__file__).resolve().parent
@@ -46,19 +53,19 @@ async def load_fixtures(file_name: str):
         with open(fixture_path, "r", encoding="utf-8") as f:
             data = json.load(f)
     except FileNotFoundError:
-        print(f"Файл фикстуры не найден: {fixture_path}")
         return
 
     # Работаем с базой данных в отдельной сессии
-    async with async_session() as session:
+    async with get_session() as session:
         try:
             for item in data:
                 if file_name == 'initial_data.json':
-                    session.add(User(**item))
-                elif file_name == 'test_questions.json':
-                    session.add(Question(**item))
-            await session.commit()
-            print(f"Фикстура '{fixture_path}' успешно загружена в базу данных.")
+                    # Проверяем, существует ли пользователь
+                    existing_user = await session.execute(
+                        select(User).where(User.telegram_id == item['telegram_id'])
+                    )
+                    if not existing_user.scalar_one_or_none():
+                        session.add(User(**item))
+
         except Exception as e:
-            await session.rollback()
-            print(f"Ошибка при загрузке фикстуры: {e}")
+            raise e

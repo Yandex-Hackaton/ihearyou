@@ -1,4 +1,5 @@
 from dataclasses import dataclass
+from decouple import config
 
 
 @dataclass
@@ -8,8 +9,8 @@ class AdminConfig:
     ADMIN_TITLE: str = "IHearYou Admin"
 
     # Секретный ключ для сессий
-    SESSION_SECRET_KEY: str = "your-secret-key-here"
-    SESSION_COOKIE_NAME: str = "admin_session"
+    SESSION_SECRET_KEY: str = config("SESSION_SECRET_KEY", default="your-secret-key-here")
+    SESSION_COOKIE_NAME: str = config("SESSION_COOKIE_NAME", default="admin_session")
 
     # Настройки UI
     PAGE_SIZE: int = 20

@@ -1,9 +1,8 @@
-from sqladmin import ModelView
-
 from data.models import Category
+from admin.base import CustomModelView
 
 
-class CategoryView(ModelView, model=Category):
+class CategoryView(CustomModelView, model=Category):
     name = 'Категория'
     name_plural = 'Категории'
 
@@ -20,7 +19,8 @@ class CategoryView(ModelView, model=Category):
     column_list = [
         Category.id,
         Category.title,
-        Category.is_active
+        Category.is_active,
+        Category.created_at,
     ]
     # Поля страницы с детальной информацией
     column_details_list = [
@@ -31,9 +31,21 @@ class CategoryView(ModelView, model=Category):
         Category.created_at,
     ]
 
-    # Поля доступные для создания и редактирования
-    form_rules = [
-        'title',
-        'description',
-        'is_active',
+    # Поля доступные для изменений
+    form_columns = [
+        Category.title,
+        Category.description,
+        Category.is_active,
     ]
+
+    @staticmethod
+    def format_datetime(model, attribute):
+        return model.created_at.strftime("%d.%m.%Y %H:%M")
+
+    column_formatters = {
+        Category.created_at: format_datetime
+    }
+
+    column_formatters_detail = {
+        Category.created_at: format_datetime
+    }
