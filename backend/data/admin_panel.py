@@ -56,13 +56,11 @@ class ContentAdmin(ModelView, model=Content):
         Content.url_link,
         Content.category_id,
         Content.category,
-        Content.text,
     ]
     column_labels = {
         Content.id: 'Идентификатор',
         Content.title: 'Текст кнопки',
         Content.description: 'Краткое описание',
-        Content.text: 'Тектовое содержимое',
         Content.image_path: 'Изображение',
         Content.url_link: 'Ссылка к основному тексту',
         Content.is_active: 'Статус активности',
@@ -70,7 +68,7 @@ class ContentAdmin(ModelView, model=Content):
         Content.category_id: 'Категория',
         Content.created_at: 'Дата и время создания',
     }
-    column_searchable_list = [Content.title, Content.text, Content.description]
+    column_searchable_list = [Content.title, Content.description]
     column_sortable_list = [
         Content.title,
         Content.created_at,

@@ -2,9 +2,10 @@ services:
   postgres:
     image: postgres:15-alpine
     container_name: ihearyou_postgres
-    env_file: .env.dev
+    env_file: .env
     volumes:
       - postgres_data:/var/lib/postgresql/data
+      - media_data:/app/data/media
     ports:
       - "5432:5432"
     healthcheck:
@@ -19,7 +20,7 @@ services:
     build:
       dockerfile: Dockerfile
     container_name: ihearyou_admin
-    env_file: .env.dev
+    env_file: .env
     ports:
       - "8000:8000"
     depends_on:
@@ -34,7 +35,7 @@ services:
     build:
       context: .
     container_name: ihearyou_bot
-    env_file: .env.dev
+    env_file: .env
     depends_on:
       postgres:
         condition: service_healthy
@@ -45,6 +46,7 @@ services:
 
 volumes:
   postgres_data:
+  media_data:
 
 networks:
   ihearyou_network:

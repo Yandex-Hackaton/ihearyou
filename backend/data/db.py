@@ -5,6 +5,7 @@ from typing import AsyncGenerator
 from sqlmodel import SQLModel
 from sqlalchemy.ext.asyncio import create_async_engine, AsyncSession
 from sqlalchemy.orm import sessionmaker
+from sqlalchemy.exc import IntegrityError
 from decouple import Config, RepositoryEnv
 
 from .models import User
@@ -37,7 +38,7 @@ async def create_db_and_tables():
 async def load_fixtures(file_name: str):
     await create_db_and_tables()
 
-    BASE_DIR = Path(__file__).resolve().parent  # директория, где лежит текущий файл
+    BASE_DIR = Path(__file__).resolve().parent
     fixture_path = BASE_DIR / "fixtures" / file_name
 
     async for session in get_session():
@@ -45,10 +46,14 @@ async def load_fixtures(file_name: str):
             with open(fixture_path, "r", encoding="utf-8") as f:
                 data = json.load(f)
         except FileNotFoundError:
-            print(f"❌ Файл фикстуры не найден: {fixture_path}")
+            print(f'❌ Файл фикстуры не найден: {fixture_path}')
 
     for item in data:
         session.add(User(**item))
-    await session.commit()
+    try:
+        await session.commit()
+    except IntegrityError:
+        print('❌ Данные уже существуют')
+        return
 
     print(f"✅ Фикстура '{fixture_path}' успешно загружена в базу данных.")
