@@ -18,4 +18,4 @@ RUN poetry install --no-interaction --no-ansi
 # Copy project (без .venv — её игнорирует .dockerignore)
 COPY . .
 
-CMD ["python", "admin_panel.py"]
+CMD ["poetry", "run", "uvicorn", "admin.app:app", "--host", "0.0.0.0", "--port", "8000"]

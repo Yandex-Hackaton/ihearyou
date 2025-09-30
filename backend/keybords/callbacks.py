@@ -12,9 +12,14 @@ class ButtonCallback(CallbackData, prefix="button"):
     button_id: int
 
 
-class GoToMainMenuCallback(CallbackData, prefix="main_menu"):
+class GoToMainMenuCallback(CallbackData, prefix="go_main"):
     """Callback для возврата в главное меню"""
     pass
+
+
+class MainMenuCallback(CallbackData, prefix="main_menu"):
+    """Callback для возврата в главное меню с указанием категории"""
+    category_id: int
 
 
 class UserStates(StatesGroup):

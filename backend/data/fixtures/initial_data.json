@@ -3,7 +3,7 @@
         "telegram_id": 1325303159,
         "username": "admin",
         "password": "admin",
-        "is_blocked": false,
+        "is_active": false,
         "is_admin": true
     }
 ]

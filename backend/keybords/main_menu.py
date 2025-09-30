@@ -3,7 +3,7 @@ from aiogram.utils.keyboard import InlineKeyboardBuilder
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlmodel import select
 
-from data.models import Button, Category
+from data.models import Content, Category
 from .callbacks import (
     ButtonCallback,
     GoToMainMenuCallback,
@@ -47,21 +47,15 @@ async def get_category_buttons_keyboard(
     """
     builder = InlineKeyboardBuilder()
     try:
-        query = select(Button).where(Button.category_id == category_id)
+        query = select(Content).where(Content.category_id == category_id)
         result = await session.execute(query)
         buttons = result.scalars().all()
 
-        if not buttons:
+        for button in buttons:
             builder.button(
-                text="❌ Нет доступных разделов",
-                callback_data=GoToMainMenuCallback().pack()
+                text=button.title,
+                callback_data=ButtonCallback(button_id=button.id).pack()
             )
-        else:
-            for button in buttons:
-                builder.button(
-                    text=button.title,
-                    callback_data=ButtonCallback(button_id=button.id).pack()
-                )
 
         builder.button(
             text="🔙 Назад к главному меню",
@@ -70,7 +64,6 @@ async def get_category_buttons_keyboard(
         builder.adjust(1)
 
     except Exception as e:
-        print(f"❌ Ошибка при загрузке кнопок категории: {e}")
         builder.button(
             text="❌ Ошибка загрузки данных",
             callback_data=GoToMainMenuCallback().pack()

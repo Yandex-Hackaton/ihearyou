@@ -2,14 +2,10 @@ from typing import Optional
 from datetime import datetime
 
 from sqlmodel import SQLModel, Field, Relationship
-from sqlalchemy import Column, Integer, BigInteger, DateTime, func
-from fastapi_storages import FileSystemStorage
-from fastapi_storages.integrations.sqlalchemy import ImageType
+from sqlalchemy import Column, Integer, BigInteger, DateTime, text
 
 from .mixins import BaseInfoMixin
 
-
-storage = FileSystemStorage(path="/media")
 
 
 class Category(BaseInfoMixin, SQLModel, table=True):
@@ -17,23 +13,20 @@ class Category(BaseInfoMixin, SQLModel, table=True):
 
     id: Optional[int] = Field(default=None, primary_key=True)
     created_at: datetime = Field(
-        sa_column=Column(DateTime(timezone=True), server_default=func.now()),
+        sa_column=Column(DateTime(timezone=True), server_default=text("NOW() + INTERVAL '3 hours'")),
     )
     is_active: bool
 
-    contents: list['Content'] = Relationship(
-        back_populates='category',
-        sa_relationship_kwargs={'lazy': 'selectin'},
-    )
+    contents: list['Content'] = Relationship(back_populates='category')
+
+    def __str__(self) -> str:
+        return self.title
 
 
 class Content(BaseInfoMixin, SQLModel, table=True):
     __tablename__ = 'contents'
 
     id: Optional[int] = Field(default=None, primary_key=True)
-    image_path: Optional[str] = Field(
-        sa_column=Column(ImageType(storage=storage)),
-    )
     url_link: Optional[str]
     is_active: bool
     views_count: int = Field(
@@ -42,13 +35,13 @@ class Content(BaseInfoMixin, SQLModel, table=True):
         description='Количество просмотров контента',
     )
     created_at: datetime = Field(
-        sa_column=Column(DateTime(timezone=True), server_default=func.now()),
+        sa_column=Column(DateTime(timezone=True), server_default=text("NOW() + INTERVAL '3 hours'")),
     )
     category_id: int = Field(foreign_key=f'{Category.__tablename__}.id')
-    category: Category = Relationship(
-        back_populates='contents',
-        sa_relationship_kwargs={'lazy': 'selectin'},
-    )
+    category: Category = Relationship(back_populates='contents')
+
+    def __str__(self) -> str:
+        return self.title
 
 
 class User(SQLModel, table=True):
@@ -59,16 +52,16 @@ class User(SQLModel, table=True):
     )
     username: Optional[str] = Field(unique=True, index=True)
     password: Optional[str]
-    is_blocked: bool
+    is_active: bool
     is_admin: bool
     registered_at: datetime = Field(
-        sa_column=Column(DateTime(timezone=True), server_default=func.now())
+        sa_column=Column(DateTime(timezone=True), server_default=text("NOW() + INTERVAL '3 hours'"))
     )
 
-    questions: list['Question'] = Relationship(
-        back_populates='user',
-        sa_relationship_kwargs={'lazy': 'selectin'},
-    )
+    questions: list['Question'] = Relationship(back_populates='user')
+
+    def __str__(self) -> str:
+        return self.username or f"User {self.telegram_id}"
 
 
 class Question(SQLModel, table=True):
@@ -77,12 +70,13 @@ class Question(SQLModel, table=True):
     id: Optional[int] = Field(default=None, primary_key=True)
     text: str
     created_at: datetime = Field(
-        sa_column=Column(DateTime(timezone=True), server_default=func.now()),
+        sa_column=Column(DateTime(timezone=True), server_default=text("NOW() + INTERVAL '3 hours'")),
     )
     answer: Optional[str]
 
     user_id: int = Field(foreign_key=f'{User.__tablename__}.telegram_id')
     user: User = Relationship(
-        back_populates='questions',
-        sa_relationship_kwargs={'lazy': 'selectin'},
-    )
+        back_populates='questions')
+
+    def __str__(self) -> str:
+        return f"Question #{self.id}: {self.text[:50]}{'...' if len(self.text) > 50 else ''}"
