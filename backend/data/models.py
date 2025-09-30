@@ -2,18 +2,20 @@ from typing import Optional
 from datetime import datetime
 
 from sqlmodel import SQLModel, Field, Relationship
-from sqlalchemy import Column, BigInteger, DateTime, func
-from passlib.context import CryptContext
+from sqlalchemy import Column, Integer, BigInteger, DateTime, func
+from fastapi_storages import FileSystemStorage
+from fastapi_storages.integrations.sqlalchemy import ImageType
 
 from .mixins import BaseInfoMixin
 
 
-pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
+storage = FileSystemStorage(path="/media")
 
 
 class Category(BaseInfoMixin, SQLModel, table=True):
     __tablename__ = 'categories'
 
+    id: Optional[int] = Field(default=None, primary_key=True)
     created_at: datetime = Field(
         sa_column=Column(DateTime(timezone=True), server_default=func.now()),
     )
@@ -28,10 +30,18 @@ class Category(BaseInfoMixin, SQLModel, table=True):
 class Content(BaseInfoMixin, SQLModel, table=True):
     __tablename__ = 'contents'
 
+    id: Optional[int] = Field(default=None, primary_key=True)
     text: Optional[str]
-    image_path: Optional[str]  # реализовать хранение файла изображения
+    image_path: Optional[str] = Field(
+        sa_column=Column(ImageType(storage=storage)),
+    )
     url_link: Optional[str]
     is_active: bool
+    views_count: int = Field(
+        default=0,
+        sa_column=Column(Integer, nullable=False, server_default="0"),
+        description='Количество просмотров контента',
+    )
     created_at: datetime = Field(
         sa_column=Column(DateTime(timezone=True), server_default=func.now()),
     )
@@ -46,7 +56,7 @@ class Content(BaseInfoMixin, SQLModel, table=True):
 class User(SQLModel, table=True):
     __tablename__ = 'users'
 
-    telegram_id: int = Field(
+    telegram_id: Optional[int] = Field(
         sa_column=Column(BigInteger, primary_key=True, autoincrement=False),
     )
     username: Optional[str] = Field(unique=True, index=True)
@@ -71,6 +81,7 @@ class Question(SQLModel, table=True):
     created_at: datetime = Field(
         sa_column=Column(DateTime(timezone=True), server_default=func.now()),
     )
+    answer: Optional[str]
 
     user_id: int = Field(foreign_key=f'{User.__tablename__}.telegram_id')
     user: User = Relationship(

@@ -4,12 +4,13 @@ from sqladmin import Admin, ModelView
 from sqladmin.filters import BooleanFilter, ForeignKeyFilter
 
 from .models import User, Category, Content, Question
-from .db import engine, create_db_and_tables
+from .db import engine, create_db_and_tables, load_fixtures
 
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     await create_db_and_tables()
+    await load_fixtures('initial_data.json')
     yield
 
 app = FastAPI(
@@ -131,6 +132,7 @@ class QuestionAdmin(ModelView, model=Question):
         Question.user_id: 'Пользователь',
         Question.created_at: 'Дата и время создания запроса',
         Question.user: 'Пользователь',
+        Question.answer: 'Ответ',
     }
     form_rules = [
         'text',
