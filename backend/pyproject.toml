@@ -25,6 +25,7 @@ python-decouple = "^3.8"
 asyncpg = "^0.30.0"
 passlib = "^1.7.4"
 bcrypt = "4.3.0"
+pytz = "^2025.2"
 
 [tool.poetry.group.test.dependencies]
 pytest = ">=7.0.0"
