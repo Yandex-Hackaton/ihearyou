@@ -12,7 +12,6 @@ class ContentView(ModelView, model=Content):
         Content.id: 'ID',
         Content.title: 'Название',
         Content.description: 'Краткое описание',
-        Content.text: 'Тектовое содержимое',
         Content.url_link: 'Ссылка',
         Content.is_active: 'Активно',
         Content.category: 'Категория',
@@ -32,7 +31,6 @@ class ContentView(ModelView, model=Content):
         Content.id,
         Content.title,
         Content.description,
-        Content.text,
         Content.url_link,
         Content.is_active,
         Content.category,
@@ -42,7 +40,6 @@ class ContentView(ModelView, model=Content):
     form_rules = [
         'title',
         'description',
-        'text',
         'url_link',
         'is_active',
         'category',

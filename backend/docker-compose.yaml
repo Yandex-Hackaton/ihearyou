@@ -5,6 +5,7 @@ services:
     env_file: .env
     volumes:
       - postgres_data:/var/lib/postgresql/data
+      - media_data:/app/data/media
     ports:
       - "5433:5432"
     healthcheck:
@@ -45,6 +46,7 @@ services:
 
 volumes:
   postgres_data:
+  media_data:
 
 networks:
   ihearyou_network:

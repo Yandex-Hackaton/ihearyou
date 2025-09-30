@@ -31,10 +31,6 @@ class Content(BaseInfoMixin, SQLModel, table=True):
     __tablename__ = 'contents'
 
     id: Optional[int] = Field(default=None, primary_key=True)
-    text: Optional[str]
-    image_path: Optional[str] = Field(
-        sa_column=Column(ImageType(storage=storage)),
-    )
     url_link: Optional[str]
     is_active: bool
     views_count: int = Field(
