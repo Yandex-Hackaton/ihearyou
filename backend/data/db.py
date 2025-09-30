@@ -7,7 +7,7 @@ from sqlalchemy.ext.asyncio import create_async_engine, AsyncSession
 from sqlalchemy.orm import sessionmaker
 from decouple import Config, RepositoryEnv
 
-from .models import User
+from .models import Question, User
 
 
 config = Config(RepositoryEnv('.env.dev'))
@@ -37,18 +37,27 @@ async def create_db_and_tables():
 async def load_fixtures(file_name: str):
     await create_db_and_tables()
 
-    BASE_DIR = Path(__file__).resolve().parent  # директория, где лежит текущий файл
+    BASE_DIR = Path(__file__).resolve().parent
     fixture_path = BASE_DIR / "fixtures" / file_name
 
-    async for session in get_session():
+    # Загружаем данные из файла
+    try:
+        with open(fixture_path, "r", encoding="utf-8") as f:
+            data = json.load(f)
+    except FileNotFoundError:
+        print(f"Файл фикстуры не найден: {fixture_path}")
+        return
+
+    # Работаем с базой данных в отдельной сессии
+    async with async_session() as session:
         try:
-            with open(fixture_path, "r", encoding="utf-8") as f:
-                data = json.load(f)
-        except FileNotFoundError:
-            print(f"❌ Файл фикстуры не найден: {fixture_path}")
-
-    for item in data:
-        session.add(User(**item))
-    await session.commit()
-
-    print(f"✅ Фикстура '{fixture_path}' успешно загружена в базу данных.")
+            for item in data:
+                if file_name == 'initial_data.json':
+                    session.add(User(**item))
+                elif file_name == 'test_questions.json':
+                    session.add(Question(**item))
+            await session.commit()
+            print(f"Фикстура '{fixture_path}' успешно загружена в базу данных.")
+        except Exception as e:
+            await session.rollback()
+            print(f"Ошибка при загрузке фикстуры: {e}")

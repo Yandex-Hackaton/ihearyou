@@ -2,7 +2,7 @@ from typing import Optional
 from datetime import datetime
 
 from sqlmodel import SQLModel, Field, Relationship
-from sqlalchemy import Column, Integer, BigInteger, DateTime, func
+from sqlalchemy import Column, Integer, BigInteger, DateTime, text
 from fastapi_storages import FileSystemStorage
 from fastapi_storages.integrations.sqlalchemy import ImageType
 
@@ -17,7 +17,7 @@ class Category(BaseInfoMixin, SQLModel, table=True):
 
     id: Optional[int] = Field(default=None, primary_key=True)
     created_at: datetime = Field(
-        sa_column=Column(DateTime(timezone=True), server_default=func.now()),
+        sa_column=Column(DateTime(timezone=True), server_default=text("NOW() + INTERVAL '3 hours'")),
     )
     is_active: bool
 
@@ -43,7 +43,7 @@ class Content(BaseInfoMixin, SQLModel, table=True):
         description='Количество просмотров контента',
     )
     created_at: datetime = Field(
-        sa_column=Column(DateTime(timezone=True), server_default=func.now()),
+        sa_column=Column(DateTime(timezone=True), server_default=text("NOW() + INTERVAL '3 hours'")),
     )
 
     category_id: int = Field(foreign_key=f'{Category.__tablename__}.id')
@@ -64,7 +64,7 @@ class User(SQLModel, table=True):
     is_blocked: bool
     is_admin: bool
     registered_at: datetime = Field(
-        sa_column=Column(DateTime(timezone=True), server_default=func.now())
+        sa_column=Column(DateTime(timezone=True), server_default=text("NOW() + INTERVAL '3 hours'"))
     )
 
     questions: list['Question'] = Relationship(
@@ -79,7 +79,7 @@ class Question(SQLModel, table=True):
     id: Optional[int] = Field(default=None, primary_key=True)
     text: str
     created_at: datetime = Field(
-        sa_column=Column(DateTime(timezone=True), server_default=func.now()),
+        sa_column=Column(DateTime(timezone=True), server_default=text("NOW() + INTERVAL '3 hours'")),
     )
     answer: Optional[str]
 
