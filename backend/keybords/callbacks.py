@@ -1,36 +1,20 @@
+from aiogram.filters.callback_data import CallbackData
 from aiogram.fsm.state import State, StatesGroup
-from pydantic import BaseModel
 
 
-class MainMenuCallback(BaseModel):
-    """Callback для главного меню"""
-    category_id: int
-    
-    def pack(self) -> str:
-        return f"main_menu:{self.category_id}"
-    
-    @classmethod
-    def unpack(cls, data: str) -> 'MainMenuCallback':
-        category_id = int(data.split(":")[1])
-        return cls(category_id=category_id)
-
-
-class CategoryCallback(BaseModel):
-    """Callback для категорий"""
+class CategoryCallback(CallbackData, prefix="category"):
+    """Callback для выбора категории"""
     category_id: int
 
 
-class ButtonCallback(BaseModel):
-    """Callback для кнопок"""
+class ButtonCallback(CallbackData, prefix="button"):
+    """Callback для нажатия на конкретную кнопку (внутри категории)"""
     button_id: int
-    
-    def pack(self) -> str:
-        return f"button:{self.button_id}"
-    
-    @classmethod
-    def unpack(cls, data: str) -> 'ButtonCallback':
-        button_id = int(data.split(":")[1])
-        return cls(button_id=button_id)
+
+
+class GoToMainMenuCallback(CallbackData, prefix="main_menu"):
+    """Callback для возврата в главное меню"""
+    pass
 
 
 class UserStates(StatesGroup):

@@ -1,4 +1,5 @@
 import asyncio
+from contextlib import asynccontextmanager
 from sqlmodel import SQLModel
 from decouple import config
 from sqlalchemy.ext.asyncio import create_async_engine, AsyncSession
@@ -17,9 +18,17 @@ async def create_db_and_tables():
     print("Таблицы созданы успешно!")
 
 
+@asynccontextmanager
 async def get_session():
-    async with async_session() as session:
+    session = async_session()
+    try:
         yield session
+        await session.commit()
+    except Exception:
+        await session.rollback()
+        raise
+    finally:
+        await session.close()
 
 
 if __name__ == "__main__":
