@@ -1,80 +1,89 @@
 from typing import Optional
-from datetime import date
+from datetime import datetime
 
-from sqlmodel import SQLModel, Relationship, Field
+from sqlmodel import SQLModel, Field, Relationship
+from sqlalchemy import Column, Integer, BigInteger, DateTime, func
+from fastapi_storages import FileSystemStorage
+from fastapi_storages.integrations.sqlalchemy import ImageType
 
-from passlib.context import CryptContext
-
-pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
-
-
-class Role(SQLModel, table=True):
-    __tablename__ = 'users_roles'
-
-    id: Optional[int] = Field(default=None, primary_key=True,)
-    slug: str = Field(unique=True,)
-    title: str = Field(unique=True)
-    description: Optional[str]
-
-    users: list['User'] = Relationship(
-        back_populates='role',
-        sa_relationship_kwargs={'lazy': 'selectin'},
-    )
-    categories: list['Category'] = Relationship(
-        back_populates='for_user_role',
-        sa_relationship_kwargs={'lazy': 'selectin'},
-    )
+from .mixins import BaseInfoMixin
 
 
-class Category(SQLModel, table=True):
-    __tablename__ = 'buttons_categories'
+storage = FileSystemStorage(path="/media")
+
+
+class Category(BaseInfoMixin, SQLModel, table=True):
+    __tablename__ = 'categories'
 
     id: Optional[int] = Field(default=None, primary_key=True)
-    slug: str = Field(unique=True)
-    title: str = Field(unique=True)
-    description: Optional[str]
+    created_at: datetime = Field(
+        sa_column=Column(DateTime(timezone=True), server_default=func.now()),
+    )
+    is_active: bool
 
-    for_user_role_id: int = Field(foreign_key=f'{Role.__tablename__}.id')
-    for_user_role: Role = Relationship(back_populates='categories')
-
-    buttons: list['Button'] = Relationship(
+    contents: list['Content'] = Relationship(
         back_populates='category',
         sa_relationship_kwargs={'lazy': 'selectin'},
     )
 
 
-class Button(SQLModel, table=True):
-    __tablename__ = 'buttons'
+class Content(BaseInfoMixin, SQLModel, table=True):
+    __tablename__ = 'contents'
 
-    id: Optional[int] = Field(
-        default=None,
-        primary_key=True,
+    id: Optional[int] = Field(default=None, primary_key=True)
+    image_path: Optional[str] = Field(
+        sa_column=Column(ImageType(storage=storage)),
     )
-    title: str = Field(unique=True, index=True)
-    description: Optional[str]
-    content: Optional[str]
+    url_link: Optional[str]
+    is_active: bool
+    views_count: int = Field(
+        default=0,
+        sa_column=Column(Integer, nullable=False, server_default="0"),
+        description='Количество просмотров контента',
+    )
+    created_at: datetime = Field(
+        sa_column=Column(DateTime(timezone=True), server_default=func.now()),
+    )
 
     category_id: int = Field(foreign_key=f'{Category.__tablename__}.id')
-    category: Category = Relationship(back_populates='buttons')
+    category: Category = Relationship(
+        back_populates='contents',
+        sa_relationship_kwargs={'lazy': 'selectin'},
+    )
 
 
 class User(SQLModel, table=True):
     __tablename__ = 'users'
 
-    id: Optional[int] = Field(default=None, primary_key=True,)
-    username: str = Field(unique=True, index=True)
-    password: str
-    name: Optional[str] = Field(index=True)
-    surname: Optional[str] = Field(index=True)
-    patronymic: Optional[str] = Field(index=True)
-    birth_date: Optional[date]
+    telegram_id: Optional[int] = Field(
+        sa_column=Column(BigInteger, primary_key=True, autoincrement=False),
+    )
+    username: Optional[str] = Field(unique=True, index=True)
+    password: Optional[str]
+    is_blocked: bool
+    is_admin: bool
+    registered_at: datetime = Field(
+        sa_column=Column(DateTime(timezone=True), server_default=func.now())
+    )
 
-    role_id: int = Field(foreign_key=f'{Role.__tablename__}.id')
-    role: Role = Relationship(
-        back_populates='users',
+    questions: list['Question'] = Relationship(
+        back_populates='user',
         sa_relationship_kwargs={'lazy': 'selectin'},
     )
 
-    @property
-    def full_name(self) -> str:
-        return f"{self.name} {self.surname}"
+
+class Question(SQLModel, table=True):
+    __tablename__ = 'questions'
+
+    id: Optional[int] = Field(default=None, primary_key=True)
+    text: str
+    created_at: datetime = Field(
+        sa_column=Column(DateTime(timezone=True), server_default=func.now()),
+    )
+    answer: Optional[str]
+
+    user_id: int = Field(foreign_key=f'{User.__tablename__}.telegram_id')
+    user: User = Relationship(
+        back_populates='questions',
+        sa_relationship_kwargs={'lazy': 'selectin'},
+    )
