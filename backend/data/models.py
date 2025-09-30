@@ -44,7 +44,6 @@ class Content(BaseInfoMixin, SQLModel, table=True):
     created_at: datetime = Field(
         sa_column=Column(DateTime(timezone=True), server_default=func.now()),
     )
-
     category_id: int = Field(foreign_key=f'{Category.__tablename__}.id')
     category: Category = Relationship(
         back_populates='contents',
