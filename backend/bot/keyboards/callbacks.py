@@ -27,3 +27,4 @@ class UserStates(StatesGroup):
     MAIN_MENU = State()
     CATEGORY_VIEW = State()
     BUTTON_CONTENT = State()
+

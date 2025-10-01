@@ -6,12 +6,17 @@ from aiogram.types import (
 )
 from aiogram.fsm.context import FSMContext
 
-from keybords.callbacks import MainMenuCallback, ButtonCallback, UserStates, CategoryCallback
-from keybords.main_menu import (
+from ..keyboards.callbacks import (
+    MainMenuCallback,
+    ButtonCallback,
+    UserStates,
+    CategoryCallback
+)
+from ..keyboards.main_menu import (
     get_category_buttons_keyboard,
     get_main_menu_keyboard
 )
-from db_handler.queries import get_category_by_id, get_button_by_id
+from data.queries import get_category_by_id, get_button_by_id
 from data.db import get_session
 from utils.logger import logger
 
@@ -23,7 +28,10 @@ async def handle_category_callback(callback: CallbackQuery, state: FSMContext):
     """Обработка callback для выбора категории"""
     try:
         callback_data = CategoryCallback.unpack(callback.data)
-        logger.info(f"Category selected: {callback_data.category_id} by user {callback.from_user.id}")
+        logger.info(
+            f"Category selected: {callback_data.category_id} "
+            f"by user {callback.from_user.id}"
+        )
 
         await state.set_state(UserStates.CATEGORY_VIEW)
 
@@ -34,7 +42,9 @@ async def handle_category_callback(callback: CallbackQuery, state: FSMContext):
             )
 
             if not category:
-                logger.warning(f"Category not found: {callback_data.category_id}")
+                logger.warning(
+                    f"Category not found: {callback_data.category_id}"
+                )
                 await callback.answer(
                     "❌ Категория не найдена",
                     show_alert=True
@@ -56,13 +66,21 @@ async def handle_category_callback(callback: CallbackQuery, state: FSMContext):
         await callback.answer()
 
     except Exception as e:
-        logger.error(f"Category callback error: {e} (user: {callback.from_user.id})")
-        await callback.answer("❌ Ошибка обработки запроса", show_alert=True)
+        logger.error(
+            f"Category callback error: {e} "
+            f"(user: {callback.from_user.id})"
+        )
+        await callback.answer(
+            "❌ Ошибка обработки запроса",
+            show_alert=True
+        )
 
 
 @callback_router.callback_query(F.data.startswith("main_menu:"))
-async def handle_main_menu_callback(callback: CallbackQuery,
-                                    state: FSMContext):
+async def handle_main_menu_callback(
+    callback: CallbackQuery,
+    state: FSMContext
+):
     """Обработка callback для главного меню"""
     try:
         callback_data = MainMenuCallback.unpack(callback.data)
@@ -75,7 +93,8 @@ async def handle_main_menu_callback(callback: CallbackQuery,
             async with get_session() as session:
                 keyboard = await get_main_menu_keyboard(session)
                 await callback.message.edit_text(
-                    "🏠 Главное меню\n\nВыберите интересующую вас категорию:",
+                    "🏠 Главное меню\n\n"
+                    "Выберите интересующую вас категорию:",
                     reply_markup=keyboard
                 )
 
@@ -89,7 +108,10 @@ async def handle_main_menu_callback(callback: CallbackQuery,
                 )
 
                 if not category:
-                    logger.warning(f"Category not found in main menu: {callback_data.category_id}")
+                    logger.warning(
+                        f"Category not found in main menu: "
+                        f"{callback_data.category_id}"
+                    )
                     await callback.answer(
                         "❌ Категория не найдена",
                         show_alert=True
@@ -111,12 +133,21 @@ async def handle_main_menu_callback(callback: CallbackQuery,
         await callback.answer()
 
     except Exception as e:
-        logger.error(f"Main menu callback error: {e} (user: {callback.from_user.id})")
-        await callback.answer("❌ Ошибка обработки запроса", show_alert=True)
+        logger.error(
+            f"Main menu callback error: {e} "
+            f"(user: {callback.from_user.id})"
+        )
+        await callback.answer(
+            "❌ Ошибка обработки запроса",
+            show_alert=True
+        )
 
 
 @callback_router.callback_query(F.data == "go_main")
-async def handle_go_to_main_menu_callback(callback: CallbackQuery, state: FSMContext):
+async def handle_go_to_main_menu_callback(
+    callback: CallbackQuery,
+    state: FSMContext
+):
     """Обработка callback для возврата в главное меню"""
     try:
         logger.info(f"Go to main menu: {callback.from_user.id}")
@@ -126,15 +157,22 @@ async def handle_go_to_main_menu_callback(callback: CallbackQuery, state: FSMCon
         async with get_session() as session:
             keyboard = await get_main_menu_keyboard(session)
             await callback.message.edit_text(
-                "🏠 Главное меню\n\nВыберите интересующую вас категорию:",
+                "🏠 Главное меню\n\n"
+                "Выберите интересующую вас категорию:",
                 reply_markup=keyboard
             )
 
         await callback.answer()
 
     except Exception as e:
-        logger.error(f"Go to main menu error: {e} (user: {callback.from_user.id})")
-        await callback.answer("❌ Ошибка обработки запроса", show_alert=True)
+        logger.error(
+            f"Go to main menu error: {e} "
+            f"(user: {callback.from_user.id})"
+        )
+        await callback.answer(
+            "❌ Ошибка обработки запроса",
+            show_alert=True
+        )
 
 
 @callback_router.callback_query(F.data.startswith("button:"))
@@ -142,7 +180,10 @@ async def handle_button_callback(callback: CallbackQuery, state: FSMContext):
     """Обработка callback для кнопок"""
     try:
         callback_data = ButtonCallback.unpack(callback.data)
-        logger.info(f"Button selected: {callback_data.button_id} by user {callback.from_user.id}")
+        logger.info(
+            f"Button selected: {callback_data.button_id} "
+            f"by user {callback.from_user.id}"
+        )
 
         await state.set_state(UserStates.BUTTON_CONTENT)
 
@@ -150,8 +191,13 @@ async def handle_button_callback(callback: CallbackQuery, state: FSMContext):
             button = await get_button_by_id(callback_data.button_id, session)
 
             if not button:
-                logger.warning(f"Button not found: {callback_data.button_id}")
-                await callback.answer("❌ Кнопка не найдена", show_alert=True)
+                logger.warning(
+                    f"Button not found: {callback_data.button_id}"
+                )
+                await callback.answer(
+                    "❌ Кнопка не найдена",
+                    show_alert=True
+                )
                 return
 
             text = f"📌 {button.title}\n\n"
@@ -184,5 +230,12 @@ async def handle_button_callback(callback: CallbackQuery, state: FSMContext):
         await callback.answer()
 
     except Exception as e:
-        logger.error(f"Button callback error: {e} (user: {callback.from_user.id})")
-        await callback.answer("❌ Ошибка обработки запроса", show_alert=True)
+        logger.error(
+            f"Button callback error: {e} "
+            f"(user: {callback.from_user.id})"
+        )
+        await callback.answer(
+            "❌ Ошибка обработки запроса",
+            show_alert=True
+        )
+

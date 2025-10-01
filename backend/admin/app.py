@@ -6,7 +6,13 @@ from starlette.middleware.sessions import SessionMiddleware
 
 from .config import AdminConfig
 from .auth import AdminAuthBackend
-from admin.view import CategoryView, ContentView, QuestionView, UserView
+from admin.view import (
+    CategoryView,
+    ContentView,
+    QuestionView,
+    UserView,
+    InteractionEventView
+)
 from data.db import engine, create_db_and_tables, load_fixtures
 from utils.logger import logger
 
@@ -54,3 +60,4 @@ admin.add_view(UserView)
 admin.add_view(CategoryView)
 admin.add_view(ContentView)
 admin.add_view(QuestionView)
+admin.add_view(InteractionEventView)

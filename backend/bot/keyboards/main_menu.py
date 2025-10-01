@@ -63,7 +63,7 @@ async def get_category_buttons_keyboard(
         )
         builder.adjust(1)
 
-    except Exception as e:
+    except Exception:
         builder.button(
             text="❌ Ошибка загрузки данных",
             callback_data=GoToMainMenuCallback().pack()
@@ -71,3 +71,4 @@ async def get_category_buttons_keyboard(
         builder.adjust(1)
 
     return builder.as_markup()
+

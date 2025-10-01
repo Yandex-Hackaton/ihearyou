@@ -3,9 +3,9 @@ from datetime import datetime
 
 from sqlmodel import SQLModel, Field, Relationship
 from sqlalchemy import Column, Integer, BigInteger, DateTime, text
+from aiogram.enums import UpdateType
 
 from .mixins import BaseInfoMixin
-
 
 
 class Category(BaseInfoMixin, SQLModel, table=True):
@@ -80,3 +80,33 @@ class Question(SQLModel, table=True):
 
     def __str__(self) -> str:
         return f"Question #{self.id}: {self.text[:50]}{'...' if len(self.text) > 50 else ''}"
+
+
+class InteractionEvent(SQLModel, table=True):
+    """Событие взаимодействия с Telegram ботом."""
+
+    __tablename__ = 'interaction_events'
+
+    id: Optional[int] = Field(default=None, primary_key=True)
+    event_type: UpdateType = Field(description="Тип события")
+    user_id: Optional[int] = Field(
+        description="ID пользователя Telegram"
+    )
+    username: Optional[str] = Field(
+        description="Имя пользователя Telegram"
+    )
+    message_text: Optional[str] = Field(description="Текст сообщения")
+    callback_data: Optional[str] = Field(
+        description="callback_data кнопки от Telegram"
+    )
+    created_at: datetime = Field(
+        sa_column=Column(
+            DateTime(timezone=True),
+            server_default=text("NOW() + INTERVAL '3 hours'")
+        ),
+        description="Когда произошло событие",
+    )
+
+    def __str__(self) -> str:
+        username_or_id = self.username or self.user_id
+        return f"Event #{self.id}: {self.event_type} from {username_or_id}"

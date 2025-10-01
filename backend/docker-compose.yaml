@@ -38,7 +38,7 @@ services:
     depends_on:
       postgres:
         condition: service_healthy
-    command: ["poetry", "run", "python", "aiogram_run.py"]
+    command: ["poetry", "run", "python", "-m", "bot.app"]
     networks:
       - ihearyou_network
     restart: unless-stopped
