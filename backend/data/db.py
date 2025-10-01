@@ -59,10 +59,12 @@ async def load_fixtures(file_name: str):
     async with get_session() as session:
         try:
             for item in data:
-                if file_name == 'initial_data.json':
+                if file_name == "initial_data.json":
                     # Проверяем, существует ли пользователь
                     existing_user = await session.execute(
-                        select(User).where(User.telegram_id == item['telegram_id'])
+                        select(User).where(
+                            User.telegram_id == item["telegram_id"],
+                        )
                     )
                     if not existing_user.scalar_one_or_none():
                         session.add(User(**item))

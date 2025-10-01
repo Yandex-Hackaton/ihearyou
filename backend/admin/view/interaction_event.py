@@ -5,8 +5,8 @@ from admin.base import CustomModelView
 class InteractionEventView(CustomModelView, model=InteractionEvent):
     """Представление для событий взаимодействия с ботом."""
 
-    name = 'Событие'
-    name_plural = 'События взаимодействий'
+    name = "Событие"
+    name_plural = "События взаимодействий"
     icon = "fa-solid fa-chart-line"
 
     # Права доступа - только чтение
@@ -17,13 +17,13 @@ class InteractionEventView(CustomModelView, model=InteractionEvent):
 
     # Названия полей
     column_labels = {
-        InteractionEvent.id: 'ID',
-        InteractionEvent.event_type: 'Тип события',
-        InteractionEvent.user_id: 'ID пользователя',
-        InteractionEvent.username: 'Username',
-        InteractionEvent.message_text: 'Текст сообщения',
-        InteractionEvent.callback_data: 'Данные кнопки',
-        InteractionEvent.created_at: 'Дата и время',
+        InteractionEvent.id: "ID",
+        InteractionEvent.event_type: "Тип события",
+        InteractionEvent.user_id: "ID пользователя",
+        InteractionEvent.username: "Username",
+        InteractionEvent.message_text: "Текст сообщения",
+        InteractionEvent.callback_data: "Данные кнопки",
+        InteractionEvent.created_at: "Дата и время",
     }
 
     # Список колонок для отображения

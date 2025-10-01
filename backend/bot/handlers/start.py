@@ -15,8 +15,7 @@ start_router = Router()
 async def cmd_start(message: Message, state: FSMContext):
     """Обработчик команды /start"""
     logger.info(
-        f"User started: {message.from_user.id} "
-        f"(@{message.from_user.username})"
+        f"User started: {message.from_user.id} " f"(@{message.from_user.username})"
     )
 
     await state.set_state(UserStates.MAIN_MENU)
@@ -28,7 +27,7 @@ async def cmd_start(message: Message, state: FSMContext):
             "👋 Добро пожаловать!\n\n"
             "Этот бот поможет вам найти информацию о нарушениях слуха.\n"
             "Выберите интересующую вас категорию:",
-            reply_markup=keyboard
+            reply_markup=keyboard,
         )
 
 
@@ -43,4 +42,3 @@ async def cmd_help(message: Message):
         "• /help - Показать это сообщение\n\n"
         "Используйте кнопки для навигации по разделам."
     )
-
