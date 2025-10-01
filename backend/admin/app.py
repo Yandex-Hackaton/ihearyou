@@ -53,7 +53,9 @@ admin = Admin(
     engine,
     title=AdminConfig.ADMIN_TITLE,
     templates_dir="admin/templates",
-    authentication_backend=AdminAuthBackend(secret_key=AdminConfig.SESSION_SECRET_KEY),
+    authentication_backend=AdminAuthBackend(
+        secret_key=AdminConfig.SESSION_SECRET_KEY
+    ),
 )
 
 # Регистрация views

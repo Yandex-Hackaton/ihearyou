@@ -3,6 +3,7 @@ from sqlalchemy.orm import selectinload
 
 from data.models import Content
 from admin.base import CustomModelView
+from enums.fields import ViewLimits, Formats
 
 
 class ContentView(CustomModelView, model=Content):
@@ -76,15 +77,15 @@ class ContentView(CustomModelView, model=Content):
         )
 
     @staticmethod
-    def format_category(model, attribute):
+    def format_category(model: Content, attribute) -> str:
         return model.category.title if model.category else "Без категории"
 
     @staticmethod
-    def format_datetime(model, attribute):
-        return model.created_at.strftime("%d.%m.%Y %H:%M")
+    def format_datetime(model: Content, attribute) -> str:
+        return model.created_at.strftime(Formats.DATETIME.value)
 
     @staticmethod
-    def format_views(model, attribute):
+    def format_views(model: Content, attribute) -> str:
         return f"{model.views_count} просм."
 
     @staticmethod
@@ -100,7 +101,7 @@ class ContentView(CustomModelView, model=Content):
         return f"{stats['not_helpful']} из {stats['total']}"
 
     @staticmethod
-    def format_rating_helpful_percent(model, attribute):
+    def format_rating_helpful_percent(model: Content, attribute):
         """Форматирование процента полезности."""
         stats = ContentView.get_rating_stats(model.ratings)
         if stats["total"] > 0:
@@ -130,7 +131,9 @@ class ContentView(CustomModelView, model=Content):
         total = len(ratings)
         helpful = sum(1 for r in ratings if r.is_helpful)
         not_helpful = sum(1 for r in ratings if r.is_not_helpful)
-        ratings_with_value = [r.rating for r in ratings if r.rating is not None]
+        ratings_with_value = [
+            r.rating for r in ratings if r.rating is not None
+        ]
         avg_rating = (
             sum(ratings_with_value) / len(ratings_with_value)
             if ratings_with_value
@@ -146,7 +149,16 @@ class ContentView(CustomModelView, model=Content):
             "helpful_percent": helpful_percent,
         }
 
+    @staticmethod
+    def truncate_description(model: Content, attribute) -> str:
+        text = model.description or ""
+        return (
+            (text[:ViewLimits.TEXT_FIELD.value] + "…")
+            if len(text) > ViewLimits.TEXT_FIELD.value else text
+        )
+
     column_formatters = {
+        Content.description: truncate_description,
         Content.category: format_category,
         Content.created_at: format_datetime,
         Content.views_count: format_views,
