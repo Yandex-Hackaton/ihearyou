@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  
+  <!-- Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;500;600;700&family=Open+Sans:wght@300;400;500;600;700&family=Roboto:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  
+  <!-- CSS Framework -->
+  <link rel="stylesheet" href="/static/css/tabler.min.css">
+  <link rel="stylesheet" href="/static/css/tabler-icons.min.css">
+  <link rel="stylesheet" href="/static/css/fontawesome.min.css">
+  <link rel="stylesheet" href="/static/css/select2.min.css">
+  <link rel="stylesheet" href="/static/css/flatpickr.min.css">
+  
+  <!-- Custom Styles - Load last to override framework styles -->
+  <link rel="stylesheet" href="/static/css/main.css">
+  
+  <!-- Additional inline styles to ensure enhanced light theme -->
+  <style>
+    /* Force enhanced light theme immediately */
+    :root {
+      --bs-body-bg: #FFFFFF !important;
+      --bs-body-color: #0F172A !important;
+    }
+    
+    body {
+      background: linear-gradient(135deg, #FFFFFF 0%, #F8FAFC 50%, #F1F5F9 100%) !important;
+      background-attachment: fixed !important;
+      color: #0F172A !important;
+    }
+    
+    .wrapper {
+      background: linear-gradient(135deg, #FFFFFF 0%, #F8FAFC 50%, #F1F5F9 100%) !important;
+      background-attachment: fixed !important;
+    }
+    
+    .page-wrapper {
+      background: linear-gradient(135deg, #FFFFFF 0%, #F8FAFC 50%, #F1F5F9 100%) !important;
+      background-attachment: fixed !important;
+    }
+    
+    /* Add subtle animation to the page */
+    body {
+      animation: fadeIn 0.8s ease-in-out;
+    }
+    
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(20px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+  </style>
+  
+  {% if admin.favicon_url %}
+  <link rel="icon" href="{{ admin.favicon_url }}">
+  {% endif %}
+  
+  {% block head %}
+  {% endblock %}
+  <title>{{ admin.title }}</title>
+</head>
+
+<body>
+  {% block body %}
+  <main>
+    {% block main %}
+    {% endblock %}
+  </main>
+  {% endblock %}
+  <script type="text/javascript" src="/static/js/jquery.min.js"></script>
+  <script type="text/javascript" src="/static/js/tabler.min.js"></script>
+  <script type="text/javascript" src="/static/js/popper.min.js"></script>
+  <script type="text/javascript" src="/static/js/bootstrap.min.js"></script>
+  <script type="text/javascript" src="/static/js/select2.full.min.js"></script>
+  <script type="text/javascript" src="/static/js/flatpickr.min.js"></script>
+  <script type="text/javascript" src="/static/js/main.js"></script>
+  {% block tail %}
+  {% endblock %}
+</body>
+
+</html>
