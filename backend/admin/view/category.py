@@ -5,6 +5,7 @@ from admin.base import CustomModelView
 class CategoryView(CustomModelView, model=Category):
     name = 'Категория'
     name_plural = 'Категории'
+    icon = "fa-solid fa-folder"
 
     # Названия полей
     column_labels = {
