@@ -225,13 +225,13 @@ async def handle_button_callback(callback: CallbackQuery, state: FSMContext):
                     text="Было полезно 👍",
                     callback_data=FeedbackCallback(
                         action="helpful",
-                        item_id=callback_data.button_id).pack()
+                        content_id=callback_data.button_id).pack()
                 ),
                 InlineKeyboardButton(
                     text="Не помогло 👎",
                     callback_data=FeedbackCallback(
                         action="unhelpful",
-                        item_id=callback_data.button_id).pack()
+                        content_id=callback_data.button_id).pack()
                 )
             )
             builder.row(
