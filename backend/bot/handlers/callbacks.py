@@ -14,13 +14,17 @@ from ..keyboards.callbacks import (
     ButtonCallback,
     FeedbackCallback,
     UserStates,
-    CategoryCallback
+    CategoryCallback,
+    AdminCallback
 )
 from ..keyboards.main_menu import (
     get_category_buttons_keyboard,
     get_main_menu_keyboard,
-    get_admin_answer_keyboard
+    get_admin_answer_keyboard,
+    get_reminder_type_keyboard,
+    get_admin_inline_keyboard
 )
+from ..services.reminder_service import ReminderService
 from data.models import Question, User
 from data.queries import get_category_by_id, get_button_by_id
 from data.db import get_session
@@ -376,6 +380,106 @@ async def process_question(message: Message, state: FSMContext):
             "Пожалуйста, попробуйте еще раз позже."
         )
         await state.clear()
+
+
+@callback_router.message(F.text == "🔗 Админ панель")
+async def admin_panel_menu(message: Message):
+    """Обрабатывает кнопку 'Админ панель' для админов."""
+
+    keyboard = await get_admin_inline_keyboard()
+    await message.answer(
+        "Перейти в админ-панель:",
+        reply_markup=keyboard
+    )
+    await message.delete()
+
+
+@callback_router.message(F.text == "📢 Напоминания")
+async def send_reminders_menu(message: Message):
+    """Обрабатывает кнопку 'Напоминания' для админов."""
+
+    keyboard = await get_reminder_type_keyboard()
+    await message.answer(
+        "📢 Выберите тип напоминания для отправки пользователям, "
+        "которые не пользовались ботом неделю:",
+        reply_markup=keyboard
+    )
+    await message.delete()
+
+
+@callback_router.callback_query(
+    AdminCallback.filter(F.action == "send_reminder")
+)
+async def send_reminder_callback(
+    callback: CallbackQuery, callback_data: AdminCallback
+):
+    """Обрабатывает отправку напоминаний."""
+
+    reminder_type = callback_data.reminder_type
+
+    # Тексты напоминаний
+    reminders = {
+        "bot": (
+            "Привет! Напоминаем, что бот «Я Тебя Слышу» всегда рядом.\n"
+            "Здесь ты можешь найти статьи, советы и поддержку. "
+            "Загляни, когда будет время 🌿\n\n"
+            "Как узнать, что снижен слух: "
+            "https://www.ihearyou.ru/materials/articles/kak-uznat-chto-snizhen-slukh\n"
+            "Влияние потери слуха на семью: "
+            "https://www.ihearyou.ru/materials/articles/vliyanie-poteri-slukha-na-semyu"
+        ),
+        "auri": (
+            "👋 Привет, это снова я — Аури!\n"
+            "Ты давно не заглядывал в бот, и я немного скучал 💙\n"
+            "У меня тут есть новые материалы и советы, которые могут быть "
+            "полезны именно тебе. Загляни, когда будет настроение — "
+            "я всегда рядом 🌟"
+        )
+    }
+
+    reminder_text = reminders.get(reminder_type, "Неизвестный тип напоминания")
+
+    # Показываем сообщение о начале отправки
+    await callback.message.edit_text(
+        "Отправляем напоминания неактивным пользователям..."
+    )
+
+    try:
+        # Отправляем напоминания неактивным пользователям
+        results = await ReminderService.send_reminders_to_inactive_users(
+            bot=callback.bot,
+            reminder_text=reminder_text,
+            days=7
+        )
+
+        # Формируем сообщение с результатами
+        result_message = (
+            f"Напоминания отправлены!\n\n"
+            f"Статистика:\n"
+            f"• Всего неактивных пользователей: {results['total']}\n"
+            f"• Успешно отправлено: {results['sent']}\n"
+            f"• Ошибок: {results['failed']}"
+        )
+
+        if results['errors']:
+            result_message += "\n\nОшибки:\n" + "\n".join(results['errors'][:5])
+            if len(results['errors']) > 5:
+                result_message += (
+                    f"\n... и еще {len(results['errors']) - 5} ошибок"
+                )
+        await callback.message.edit_text(result_message)
+
+    except Exception as e:
+        logger.error(f"Ошибка при отправке напоминаний: {e}")
+        await callback.message.edit_text(
+            "Ошибка при отправке напоминаний"
+        )
+
+
+@callback_router.callback_query(AdminCallback.filter(F.action == "cancel"))
+async def cancel_admin_action(callback: CallbackQuery):
+    """Отменяет действие админа."""
+    await callback.message.delete()
 
 
 @callback_router.message(F.text == "🤝 Помощь")

@@ -88,6 +88,71 @@ async def get_main_reply_keyboard() -> ReplyKeyboardMarkup:
     return builder.as_markup(resize_keyboard=True)
 
 
+async def get_admin_reply_keyboard() -> ReplyKeyboardMarkup:
+    """
+    Создает реплай-клавиатуру для админов с кнопками:
+    - Админ панель
+    - Отправка напоминаний
+    """
+    builder = ReplyKeyboardBuilder()
+    builder.button(text="🔗 Админ панель")
+    builder.button(text="📢 Напоминания")
+    builder.adjust(2)
+    return builder.as_markup(resize_keyboard=True)
+
+
+async def get_admin_inline_keyboard() -> InlineKeyboardMarkup:
+    """
+    Создает inline клавиатуру для админов с кнопками:
+    - К вопросам
+    - К статистике
+    """
+    builder = InlineKeyboardBuilder()
+    builder.button(
+        text="❓ К вопросам",
+        url="https://stepaxvii.ru/admin/question/list"
+    )
+    builder.button(
+        text="📊 К статистике",
+        url="https://stepaxvii.ru/admin/interactionevent/list"
+    )
+    builder.adjust(1)
+    return builder.as_markup()
+
+
+async def get_reminder_type_keyboard() -> InlineKeyboardMarkup:
+    """
+    Создает inline клавиатуру для выбора типа напоминания
+    """
+    builder = InlineKeyboardBuilder()
+    builder.button(
+        text="От бота",
+        callback_data=AdminCallback(
+            action="send_reminder",
+            question_id=None,
+            reminder_type="bot"
+        ).pack()
+    )
+    builder.button(
+        text="От Аури",
+        callback_data=AdminCallback(
+            action="send_reminder",
+            question_id=None,
+            reminder_type="auri"
+        ).pack()
+    )
+    builder.button(
+        text="Отмена",
+        callback_data=AdminCallback(
+            action="cancel",
+            question_id=None,
+            reminder_type=None
+        ).pack()
+    )
+    builder.adjust(1)
+    return builder.as_markup()
+
+
 async def get_admin_answer_keyboard(question_id: int) -> InlineKeyboardMarkup:
     """Кнопка 'Ответить' для админа."""
     builder = InlineKeyboardBuilder()
@@ -95,7 +160,9 @@ async def get_admin_answer_keyboard(question_id: int) -> InlineKeyboardMarkup:
             text="Ответить",
             callback_data=AdminCallback(
                 action="answer_question",
-                question_id=question_id).pack()
+                question_id=question_id,
+                reminder_type=None
+            ).pack()
     )
     builder.adjust(1)
     return builder.as_markup()

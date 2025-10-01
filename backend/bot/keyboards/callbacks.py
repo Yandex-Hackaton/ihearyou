@@ -1,5 +1,6 @@
 from aiogram.filters.callback_data import CallbackData
 from aiogram.fsm.state import State, StatesGroup
+from typing import Optional
 
 
 class CategoryCallback(CallbackData, prefix="category"):
@@ -24,7 +25,8 @@ class MainMenuCallback(CallbackData, prefix="main_menu"):
 
 class AdminCallback(CallbackData, prefix="admin"):
     action: str
-    question_id: int
+    question_id: Optional[int] = None
+    reminder_type: Optional[str] = None
 
 
 class FeedbackCallback(CallbackData, prefix="feedback"):
