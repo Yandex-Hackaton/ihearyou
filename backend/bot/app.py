@@ -1,4 +1,5 @@
 """Инициализация и запуск Telegram бота."""
+
 import asyncio
 
 from aiogram import Bot, Dispatcher
@@ -12,7 +13,7 @@ from data.db import create_db_and_tables
 from utils.logger import logger
 
 # Инициализация бота и диспетчера
-bot = Bot(token=config('BOT_TOKEN'))
+bot = Bot(token=config("BOT_TOKEN"))
 dp = Dispatcher(storage=MemoryStorage())
 
 
@@ -51,4 +52,3 @@ async def main():
 
 if __name__ == "__main__":
     asyncio.run(main())
-

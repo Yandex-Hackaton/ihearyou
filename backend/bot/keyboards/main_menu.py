@@ -17,13 +17,11 @@ async def add_back_to_main_menu_button(builder: InlineKeyboardBuilder) -> None:
     Добавляет в клавиатуру кнопку "Назад к главному меню".
     """
     builder.button(
-        text="🔙 Назад к главному меню",
-        callback_data=GoToMainMenuCallback().pack()
+        text="🔙 Назад к главному меню", callback_data=GoToMainMenuCallback().pack()
     )
 
 
-async def get_main_menu_keyboard(
-        session: AsyncSession) -> InlineKeyboardMarkup:
+async def get_main_menu_keyboard(session: AsyncSession) -> InlineKeyboardMarkup:
     """
     Создает главное меню с двумя основными категориями из БД.
     """
@@ -34,15 +32,15 @@ async def get_main_menu_keyboard(
     for category in categories:
         builder.button(
             text=category.title,
-            callback_data=CategoryCallback(category_id=category.id).pack()
+            callback_data=CategoryCallback(category_id=category.id).pack(),
         )
     builder.adjust(1)
     return builder.as_markup()
 
 
 async def get_category_buttons_keyboard(
-        category_id: int,
-        session: AsyncSession) -> InlineKeyboardMarkup:
+    category_id: int, session: AsyncSession
+) -> InlineKeyboardMarkup:
     """
     Создает клавиатуру с кнопками для конкретной категории.
     """
@@ -55,19 +53,18 @@ async def get_category_buttons_keyboard(
         for button in buttons:
             builder.button(
                 text=button.title,
-                callback_data=ButtonCallback(button_id=button.id).pack()
+                callback_data=ButtonCallback(button_id=button.id).pack(),
             )
 
         builder.button(
-            text="🔙 Назад к главному меню",
-            callback_data=GoToMainMenuCallback().pack()
+            text="🔙 Назад к главному меню", callback_data=GoToMainMenuCallback().pack()
         )
         builder.adjust(1)
 
     except Exception:
         builder.button(
             text="❌ Ошибка загрузки данных",
-            callback_data=GoToMainMenuCallback().pack()
+            callback_data=GoToMainMenuCallback().pack(),
         )
         builder.adjust(1)
 
