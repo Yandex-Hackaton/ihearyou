@@ -26,9 +26,26 @@ class MainMenuCallback(CallbackData, prefix="main_menu"):
     category_id: int
 
 
+class AdminCallback(CallbackData, prefix="admin"):
+    action: str
+    question_id: int
+
+
+class FeedbackCallback(CallbackData, prefix="feedback"):
+    action: str
+    content_id: int
+
+
+class RatingCallback(CallbackData, prefix="rating"):
+    rating: int
+
+
 class UserStates(StatesGroup):
     """Состояния пользователя"""
 
     MAIN_MENU = State()
     CATEGORY_VIEW = State()
     BUTTON_CONTENT = State()
+    QUESTION = State()  # Состояние ожидания вопроса от пользователя
+    ANSWER = State()   # Состояние ожидания ответа от админа
+    REVIEW = State()   # Состояние ожидания оценки (1-5)
