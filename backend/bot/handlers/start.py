@@ -18,8 +18,7 @@ start_router = Router()
 async def cmd_start(message: Message, state: FSMContext):
     """Обработчик команды /start"""
     logger.info(
-        f"User started: {message.from_user.id} "
-        f"(@{message.from_user.username})"
+        f"User started: {message.from_user.id} " f"(@{message.from_user.username})"
     )
     await state.set_state(UserStates.MAIN_MENU)
     await message.answer(

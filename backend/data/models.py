@@ -5,16 +5,15 @@ from sqlmodel import SQLModel, Field, Relationship
 from sqlalchemy import Column, Integer, BigInteger, DateTime, text
 from aiogram.enums import UpdateType
 
-from .mixins import BaseInfoMixin
+from .mixins import BaseInfoMixin, BaseCreatedAtFieldMixin
+from .constants import DEF_START_VALUE, DEF_DATETIME_VIEW_STR
+from enums.msg import AnswerChoices
 
 
-class Category(BaseInfoMixin, SQLModel, table=True):
+class Category(BaseInfoMixin, BaseCreatedAtFieldMixin, table=True):
     __tablename__ = 'categories'
 
     id: Optional[int] = Field(default=None, primary_key=True)
-    created_at: datetime = Field(
-        sa_column=Column(DateTime(timezone=True), server_default=text("NOW() + INTERVAL '3 hours'")),
-    )
     is_active: bool
 
     contents: list['Content'] = Relationship(back_populates='category')
@@ -23,18 +22,19 @@ class Category(BaseInfoMixin, SQLModel, table=True):
         return self.title
 
 
-class Content(BaseInfoMixin, SQLModel, table=True):
+class Content(BaseInfoMixin, BaseCreatedAtFieldMixin, SQLModel, table=True):
     __tablename__ = 'contents'
 
     id: Optional[int] = Field(default=None, primary_key=True)
     url_link: Optional[str]
     is_active: bool
     views_count: int = Field(
-        default=0,
-        sa_column=Column(Integer, nullable=False, server_default="0")
-    )
-    created_at: datetime = Field(
-        sa_column=Column(DateTime(timezone=True), server_default=text("NOW() + INTERVAL '3 hours'")),
+        default=DEF_START_VALUE,
+        sa_column=Column(
+            Integer,
+            nullable=False,
+            server_default=str(DEF_START_VALUE),
+        ),
     )
     category_id: int = Field(foreign_key=f'{Category.__tablename__}.id')
     category: Category = Relationship(back_populates='contents')
@@ -55,36 +55,38 @@ class User(SQLModel, table=True):
     is_active: bool
     is_admin: bool
     registered_at: datetime = Field(
-        sa_column=Column(DateTime(timezone=True), server_default=text("NOW() + INTERVAL '3 hours'"))
+        sa_column=Column(
+            DateTime(timezone=True),
+            server_default=text(DEF_DATETIME_VIEW_STR),
+        )
     )
 
     questions: list['Question'] = Relationship(back_populates='user')
     ratings: list['Rating'] = Relationship(back_populates='user')
 
     def __str__(self) -> str:
-        return self.username or f"User {self.telegram_id}"
+        return self.username or f'User {self.telegram_id}'
 
 
-class Question(SQLModel, table=True):
+class Question(BaseCreatedAtFieldMixin, SQLModel, table=True):
     __tablename__ = 'questions'
 
     id: Optional[int] = Field(default=None, primary_key=True)
     text: str
-    created_at: datetime = Field(
-        sa_column=Column(DateTime(timezone=True), server_default=text("NOW() + INTERVAL '3 hours'")),
-    )
     answer: Optional[str]
 
     user_id: int = Field(foreign_key=f'{User.__tablename__}.telegram_id')
-    user: User = Relationship(
-        back_populates='questions')
+    user: User = Relationship(back_populates='questions')
 
     def __str__(self) -> str:
-        return f"Question #{self.id}: {self.text[:50]}{'...' if len(self.text) > 50 else ''}"
+        return (
+            f'Question #{self.id}: {self.text[:50]}'
+            f'{'...' if len(self.text) > 50 else ''}'
+        )
 
 
-class InteractionEvent(SQLModel, table=True):
-    """Событие взаимодействия с Telegram ботом."""
+class InteractionEvent(BaseCreatedAtFieldMixin, SQLModel, table=True):
+    '''Событие взаимодействия с Telegram ботом.'''
 
     __tablename__ = 'interaction_events'
 
@@ -94,33 +96,20 @@ class InteractionEvent(SQLModel, table=True):
     username: Optional[str]
     message_text: Optional[str]
     callback_data: Optional[str]
-    created_at: datetime = Field(
-        sa_column=Column(
-            DateTime(timezone=True),
-            server_default=text("NOW() + INTERVAL '3 hours'")
-        )
-    )
 
     def __str__(self) -> str:
         username_or_id = self.username or self.user_id
-        return f"Event #{self.id}: {self.event_type} from {username_or_id}"
+        return f'Event #{self.id}: {self.event_type} from {username_or_id}'
 
 
-class Rating(SQLModel, table=True):
-    """Рейтинг контента от пользователя."""
+class Rating(BaseCreatedAtFieldMixin, SQLModel, table=True):
+    '''Рейтинг контента от пользователя.'''
 
     __tablename__ = 'ratings'
 
     id: Optional[int] = Field(default=None, primary_key=True)
-    is_helpful: bool = Field(default=False)
-    is_not_helpful: bool = Field(default=False)
+    is_helpful: Optional[bool] 
     rating: Optional[int] = Field(default=None)
-    created_at: datetime = Field(
-        sa_column=Column(
-            DateTime(timezone=True),
-            server_default=text("NOW() + INTERVAL '3 hours'")
-        )
-    )
 
     user_id: int = Field(foreign_key=f'{User.__tablename__}.telegram_id')
     user: User = Relationship(back_populates='ratings')
@@ -129,10 +118,12 @@ class Rating(SQLModel, table=True):
     content: Content = Relationship(back_populates='ratings')
 
     def __str__(self) -> str:
-        if self.is_helpful:
-            helpful_status = "Helpful"
-        elif self.is_not_helpful:
-            helpful_status = "Not helpful"
-        else:
-            helpful_status = "No rating"
-        return f"Rating #{self.id}: {helpful_status} by User {self.user_id}"
+        status_map = {
+            True: AnswerChoices.HELPFUL.value,
+            False: AnswerChoices.NOT_HELPFUL.value,
+            None: AnswerChoices.NO_RATING.value,
+        }
+        return (
+            f'Rating #{self.id}: {status_map.get(self.is_helpful)} '
+            f'by User {self.user_id}'
+        )

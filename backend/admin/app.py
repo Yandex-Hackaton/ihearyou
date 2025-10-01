@@ -11,7 +11,7 @@ from admin.view import (
     ContentView,
     QuestionView,
     UserView,
-    InteractionEventView
+    InteractionEventView,
 )
 from data.db import engine, create_db_and_tables, load_fixtures
 from utils.logger import logger
@@ -20,14 +20,15 @@ from utils.logger import logger
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     logger.info("Starting admin panel...")
-    
+
     await create_db_and_tables()
-    await load_fixtures('initial_data.json')
-    
+    await load_fixtures("initial_data.json")
+
     logger.info("Admin panel started successfully")
     yield
-    
+
     logger.info("Admin panel stopped")
+
 
 app = FastAPI(
     title=AdminConfig.TITLE,
@@ -48,11 +49,11 @@ app.mount("/static", StaticFiles(directory="admin/statics"), name="static")
 
 # Настраиваем SQLAdmin с кастомными шаблонами и аутентификацией
 admin = Admin(
-    app, 
-    engine, 
+    app,
+    engine,
     title=AdminConfig.ADMIN_TITLE,
     templates_dir="admin/templates",
-    authentication_backend=AdminAuthBackend(secret_key=AdminConfig.SESSION_SECRET_KEY)
+    authentication_backend=AdminAuthBackend(secret_key=AdminConfig.SESSION_SECRET_KEY),
 )
 
 # Регистрация views
