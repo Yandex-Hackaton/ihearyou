@@ -5,6 +5,7 @@ from sqladmin.authentication import AuthenticationBackend
 from data.models import User
 from data.db import get_session
 from utils.logger import logger
+from enums.msg import AuthAdmin
 
 
 class AdminAuthBackend(AuthenticationBackend):
@@ -20,29 +21,40 @@ class AdminAuthBackend(AuthenticationBackend):
         # Получаем сессию базы данных
         async with get_session() as session:
             # Ищем пользователя по username и проверяем, что он админ
-            stmt = select(User).where(User.username == username, User.is_admin == True)
+            stmt = select(User).where(
+                User.username == username, User.is_admin,
+            )
             result = await session.execute(stmt)
             user = result.scalar_one_or_none()
 
             if not user:
                 logger.warning(
-                    f'Admin login failed: user not found or not admin - {username}'
+                    f'{AuthAdmin.LOGIN_FAILED.value}: '
+                    f'user not found or not admin - {username}'
                 )
                 return False
 
             # Простая проверка пароля (без хеширования)
             if password != user.password:
-                logger.warning(f'Admin login failed: wrong password - {username}')
+                logger.warning(
+                    f'{AuthAdmin.LOGIN_FAILED.value}: '
+                    f'wrong password - {username}'
+                )
                 return False
 
             # Сохраняем информацию о пользователе в сессии
             request.session.update({'user_id': user.telegram_id})
-            logger.info(f'Admin login successful: {username} (ID: {user.telegram_id})')
+            logger.info(
+                f'{AuthAdmin.LOGIN_SUCCESSFUL.value}: '
+                f'{username} (ID: {user.telegram_id})'
+            )
             return True
 
     async def logout(self, request: Request) -> bool:
         user_id = request.session.get('user_id')
-        logger.info(f'Admin logout: user_id={user_id}')
+        logger.info(
+            f'{AuthAdmin.LOGOUT.value}: user_id={user_id}'
+        )
         request.session.clear()
         return True
 
@@ -54,14 +66,14 @@ class AdminAuthBackend(AuthenticationBackend):
         # Проверяем, что пользователь все еще существует и является админом
         async with get_session() as session:
             stmt = select(User).where(
-                User.telegram_id == user_id, User.is_admin == True
+                User.telegram_id == user_id, User.is_admin
             )
             result = await session.execute(stmt)
             user = result.scalar_one_or_none()
 
             if user is None:
                 logger.warning(
-                    f'Admin authentication failed: user not found or not admin - {user_id}'
+                    f'{AuthAdmin.AUTH_FAILED.value}: '
+                    f'user not found or not admin - {user_id}'
                 )
-
             return user is not None

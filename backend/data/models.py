@@ -1,19 +1,23 @@
 from typing import Optional
-from datetime import datetime
+from datetime import datetime, timedelta
 
 from sqlmodel import SQLModel, Field, Relationship
-from sqlalchemy import Column, Integer, BigInteger, DateTime, text
+from sqlalchemy import Column, Integer, BigInteger, DateTime, Text, String
 from aiogram.enums import UpdateType
 
-from .mixins import BaseInfoMixin, BaseCreatedAtFieldMixin
-from .constants import DEF_START_VALUE, DEF_DATETIME_VIEW_STR
+from .mixins import BaseInfoMixin, BaseCreatedAtFieldMixin, BaseIDMixin
 from enums.msg import AnswerChoices
+from enums.fields import InitValue, ViewLimits, Length
 
 
-class Category(BaseInfoMixin, BaseCreatedAtFieldMixin, table=True):
+class Category(
+    BaseIDMixin,
+    BaseInfoMixin,
+    BaseCreatedAtFieldMixin,
+    table=True,
+):
     __tablename__ = 'categories'
 
-    id: Optional[int] = Field(default=None, primary_key=True)
     is_active: bool
 
     contents: list['Content'] = Relationship(back_populates='category')
@@ -22,26 +26,31 @@ class Category(BaseInfoMixin, BaseCreatedAtFieldMixin, table=True):
         return self.title
 
 
-class Content(BaseInfoMixin, BaseCreatedAtFieldMixin, SQLModel, table=True):
+class Content(
+    BaseIDMixin,
+    BaseInfoMixin,
+    BaseCreatedAtFieldMixin,
+    table=True,
+):
     __tablename__ = 'contents'
 
-    id: Optional[int] = Field(default=None, primary_key=True)
-    url_link: Optional[str]
+    url_link: Optional[str] = Field(
+        sa_column=String(Length.URL_LINK_FIELD.value),
+    )
     is_active: bool
     views_count: int = Field(
-        default=DEF_START_VALUE,
+        default=InitValue.DEFAULT_START_VALUE.value,
         sa_column=Column(
             Integer,
             nullable=False,
-            server_default=str(DEF_START_VALUE),
+            server_default=str(InitValue.DEFAULT_START_VALUE.value),
         ),
     )
+
     category_id: int = Field(foreign_key=f'{Category.__tablename__}.id')
     category: Category = Relationship(back_populates='contents')
-    ratings: list['Rating'] = Relationship(back_populates='content')
 
-    def __str__(self) -> str:
-        return self.title
+    ratings: list['Rating'] = Relationship(back_populates='content')
 
 
 class User(SQLModel, table=True):
@@ -51,14 +60,14 @@ class User(SQLModel, table=True):
         sa_column=Column(BigInteger, primary_key=True, autoincrement=False),
     )
     username: Optional[str] = Field(unique=True, index=True)
-    password: Optional[str]
+    password: Optional[str] = Field(
+        sa_column=String(Length.PASSWORD_FIELD.value),
+    )
     is_active: bool
     is_admin: bool
     registered_at: datetime = Field(
-        sa_column=Column(
-            DateTime(timezone=True),
-            server_default=text(DEF_DATETIME_VIEW_STR),
-        )
+        default_factory=lambda: datetime.utcnow() + timedelta(hours=3),
+        sa_type=DateTime(timezone=True),
     )
 
     questions: list['Question'] = Relationship(back_populates='user')
@@ -68,29 +77,32 @@ class User(SQLModel, table=True):
         return self.username or f'User {self.telegram_id}'
 
 
-class Question(BaseCreatedAtFieldMixin, SQLModel, table=True):
+class Question(BaseIDMixin, BaseCreatedAtFieldMixin, table=True):
     __tablename__ = 'questions'
 
-    id: Optional[int] = Field(default=None, primary_key=True)
-    text: str
-    answer: Optional[str]
+    text: Optional[str] = Field(sa_type=Text())
+    answer_text: Optional[str] = Field(sa_type=Text())
 
     user_id: int = Field(foreign_key=f'{User.__tablename__}.telegram_id')
     user: User = Relationship(back_populates='questions')
 
     def __str__(self) -> str:
         return (
-            f'Question #{self.id}: {self.text[:50]}'
-            f'{'...' if len(self.text) > 50 else ''}'
+            f'Question #{self.id}: '
+            f'{self.text[:ViewLimits.TEXT_FIELD.value]}'
+            f'{'...' if len(self.text) > ViewLimits.TEXT_FIELD.value else ''}'
         )
 
 
-class InteractionEvent(BaseCreatedAtFieldMixin, SQLModel, table=True):
+class InteractionEvent(
+    BaseIDMixin,
+    BaseCreatedAtFieldMixin,
+    table=True,
+):
     '''Событие взаимодействия с Telegram ботом.'''
 
     __tablename__ = 'interaction_events'
 
-    id: Optional[int] = Field(default=None, primary_key=True)
     event_type: UpdateType
     user_id: Optional[int]
     username: Optional[str]
@@ -102,14 +114,17 @@ class InteractionEvent(BaseCreatedAtFieldMixin, SQLModel, table=True):
         return f'Event #{self.id}: {self.event_type} from {username_or_id}'
 
 
-class Rating(BaseCreatedAtFieldMixin, SQLModel, table=True):
+class Rating(
+    BaseIDMixin,
+    BaseCreatedAtFieldMixin,
+    table=True,
+):
     '''Рейтинг контента от пользователя.'''
 
     __tablename__ = 'ratings'
 
-    id: Optional[int] = Field(default=None, primary_key=True)
-    is_helpful: Optional[bool] 
-    rating: Optional[int] = Field(default=None)
+    is_helpful: Optional[bool]
+    score: Optional[int] = Field(default=None)
 
     user_id: int = Field(foreign_key=f'{User.__tablename__}.telegram_id')
     user: User = Relationship(back_populates='ratings')
