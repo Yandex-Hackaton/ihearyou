@@ -9,7 +9,9 @@ from utils.logger import logger
 class QuestionView(CustomModelView, model=Question):
     name = 'Вопрос'
     name_plural = 'Вопросы'
-    # Запрещаем действия с этой моделью
+    icon = "fa-solid fa-circle-question"
+
+    # Разрешённые действия с моделью
     can_create = False
     can_edit = True
     can_delete = False

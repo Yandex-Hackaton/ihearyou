@@ -31,14 +31,14 @@ class Content(BaseInfoMixin, SQLModel, table=True):
     is_active: bool
     views_count: int = Field(
         default=0,
-        sa_column=Column(Integer, nullable=False, server_default="0"),
-        description='Количество просмотров контента',
+        sa_column=Column(Integer, nullable=False, server_default="0")
     )
     created_at: datetime = Field(
         sa_column=Column(DateTime(timezone=True), server_default=text("NOW() + INTERVAL '3 hours'")),
     )
     category_id: int = Field(foreign_key=f'{Category.__tablename__}.id')
     category: Category = Relationship(back_populates='contents')
+    ratings: list['Rating'] = Relationship(back_populates='content')
 
     def __str__(self) -> str:
         return self.title
@@ -59,6 +59,7 @@ class User(SQLModel, table=True):
     )
 
     questions: list['Question'] = Relationship(back_populates='user')
+    ratings: list['Rating'] = Relationship(back_populates='user')
 
     def __str__(self) -> str:
         return self.username or f"User {self.telegram_id}"
@@ -88,25 +89,50 @@ class InteractionEvent(SQLModel, table=True):
     __tablename__ = 'interaction_events'
 
     id: Optional[int] = Field(default=None, primary_key=True)
-    event_type: UpdateType = Field(description="Тип события")
-    user_id: Optional[int] = Field(
-        description="ID пользователя Telegram"
-    )
-    username: Optional[str] = Field(
-        description="Имя пользователя Telegram"
-    )
-    message_text: Optional[str] = Field(description="Текст сообщения")
-    callback_data: Optional[str] = Field(
-        description="callback_data кнопки от Telegram"
-    )
+    event_type: UpdateType
+    user_id: Optional[int]
+    username: Optional[str]
+    message_text: Optional[str]
+    callback_data: Optional[str]
     created_at: datetime = Field(
         sa_column=Column(
             DateTime(timezone=True),
             server_default=text("NOW() + INTERVAL '3 hours'")
-        ),
-        description="Когда произошло событие",
+        )
     )
 
     def __str__(self) -> str:
         username_or_id = self.username or self.user_id
         return f"Event #{self.id}: {self.event_type} from {username_or_id}"
+
+
+class Rating(SQLModel, table=True):
+    """Рейтинг контента от пользователя."""
+
+    __tablename__ = 'ratings'
+
+    id: Optional[int] = Field(default=None, primary_key=True)
+    is_helpful: bool = Field(default=False)
+    is_not_helpful: bool = Field(default=False)
+    rating: Optional[int] = Field(default=None)
+    created_at: datetime = Field(
+        sa_column=Column(
+            DateTime(timezone=True),
+            server_default=text("NOW() + INTERVAL '3 hours'")
+        )
+    )
+
+    user_id: int = Field(foreign_key=f'{User.__tablename__}.telegram_id')
+    user: User = Relationship(back_populates='ratings')
+
+    content_id: int = Field(foreign_key=f'{Content.__tablename__}.id')
+    content: Content = Relationship(back_populates='ratings')
+
+    def __str__(self) -> str:
+        if self.is_helpful:
+            helpful_status = "Helpful"
+        elif self.is_not_helpful:
+            helpful_status = "Not helpful"
+        else:
+            helpful_status = "No rating"
+        return f"Rating #{self.id}: {helpful_status} by User {self.user_id}"

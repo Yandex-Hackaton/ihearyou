@@ -79,15 +79,6 @@ class InteractionEventView(CustomModelView, model=InteractionEvent):
         return model.created_at.strftime("%d.%m.%Y %H:%M:%S")
 
     @staticmethod
-    def format_event_type(model, attribute):
-        """Форматирование типа события."""
-        event_map = {
-            "message": "📝 Сообщение",
-            "callback_query": "🔘 Нажатие кнопки",
-        }
-        return event_map.get(str(model.event_type), str(model.event_type))
-
-    @staticmethod
     def format_user(model, attribute):
         """Форматирование пользователя."""
         if model.username:
@@ -113,14 +104,12 @@ class InteractionEventView(CustomModelView, model=InteractionEvent):
 
     column_formatters = {
         InteractionEvent.created_at: format_datetime,
-        InteractionEvent.event_type: format_event_type,
         InteractionEvent.message_text: format_message,
         InteractionEvent.callback_data: format_callback,
     }
 
     column_formatters_detail = {
         InteractionEvent.created_at: format_datetime,
-        InteractionEvent.event_type: format_event_type,
     }
 
     # Дополнительная статистика (можно добавить в будущем)

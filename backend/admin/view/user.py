@@ -7,6 +7,12 @@ from admin.base import CustomModelView
 class UserView(CustomModelView, model=User):
     name = 'Пользователь'
     name_plural = 'Пользователи'
+    icon = "fa-solid fa-users"
+
+    # Разрешённые действия с моделью
+    can_create = False
+    can_edit = True
+    can_delete = False
 
     # Названия полей
     column_labels = {
