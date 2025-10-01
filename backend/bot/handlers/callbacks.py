@@ -19,7 +19,8 @@ from ..keyboards.callbacks import (
 from ..keyboards.main_menu import (
     get_category_buttons_keyboard,
     get_main_menu_keyboard,
-    get_admin_answer_keyboard
+    get_admin_answer_keyboard,
+    get_rating_keyboard
 )
 from data.models import Question, User
 from data.queries import get_category_by_id, get_button_by_id
@@ -385,3 +386,67 @@ async def help_request(message: Message):
         "Мы направили в поддержку обращение, "
         "скоро с вами свяжется администратор."
     )
+
+
+@callback_router.callback_query(FeedbackCallback.filter())
+async def handle_feedback_callback(
+    callback: CallbackQuery,
+    callback_data: FeedbackCallback
+):
+    """Обработка обратной связи (полезно/не помогло)"""
+    try:
+        user_id = callback.from_user.id
+        content_id = callback_data.content_id
+        action = callback_data.action
+
+        if action == "helpful":
+            logger.info(f"User {user_id} found content {content_id} helpful.")
+            text = (
+                "Мы рады, что смогли вам помочь! 😊\n\n"
+                "Пожалуйста, оцените материал "
+                "с помощью клавиатуры под сообщением."
+            )
+            keyboard = get_rating_keyboard()
+            await callback.message.edit_text(text, reply_markup=keyboard)
+            await callback.answer()
+
+        elif action == "unhelpful":
+            logger.info(
+                f"User {user_id} found content "
+                f"{content_id} unhelpful."
+            )
+            text = (
+                "Спасибо за обратную связь! "
+                "Мы постараемся улучшить материал. 🙏"
+            )
+            # Чтобы вернуть кнопку "Назад", нужно снова получить категорию
+            async with get_session() as session:
+                button = await get_button_by_id(content_id, session)
+                builder = InlineKeyboardBuilder()
+                if button:
+                    builder.row(
+                        InlineKeyboardButton(
+                            text="🔙 Назад",
+                            callback_data=CategoryCallback(
+                                category_id=button.category_id).pack()
+                        )
+                    )
+                await callback.message.edit_text(
+                    text,
+                    reply_markup=builder.as_markup()
+                )
+
+            await callback.answer(
+                "Спасибо за обратную связь!",
+                show_alert=False
+            )
+
+    except Exception as e:
+        logger.error(
+            f"Feedback callback error: {e} "
+            f"(user: {callback.from_user.id})"
+        )
+        await callback.answer(
+            "❌ Ошибка обработки запроса",
+            show_alert=True
+        )

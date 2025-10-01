@@ -8,7 +8,8 @@ from .callbacks import (
     AdminCallback,
     ButtonCallback,
     GoToMainMenuCallback,
-    CategoryCallback
+    CategoryCallback,
+    RatingCallback
 )
 
 
@@ -98,4 +99,31 @@ async def get_admin_answer_keyboard(question_id: int) -> InlineKeyboardMarkup:
                 question_id=question_id).pack()
     )
     builder.adjust(1)
+    return builder.as_markup()
+
+
+def get_rating_keyboard() -> InlineKeyboardMarkup:
+    """Клавиатура для оценки от 1 до 5."""
+    builder = InlineKeyboardBuilder()
+    builder.button(
+        text="5 ⭐",
+        callback_data=RatingCallback(rating=5).pack()
+    )
+    builder.button(
+        text="4 ⭐",
+        callback_data=RatingCallback(rating=5).pack()
+    )
+    builder.button(
+        text="3 ⭐",
+        callback_data=RatingCallback(rating=5).pack()
+    )
+    builder.button(
+        text="2 ⭐",
+        callback_data=RatingCallback(rating=5).pack()
+    )
+    builder.button(
+        text="1 ⭐",
+        callback_data=RatingCallback(rating=5).pack()
+    )
+    builder.adjust(5)
     return builder.as_markup()
