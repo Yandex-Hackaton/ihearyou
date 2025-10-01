@@ -3,7 +3,10 @@ from aiogram.filters import CommandStart, Command
 from aiogram.types import Message
 from aiogram.fsm.context import FSMContext
 
-from ..keyboards.main_menu import get_main_menu_keyboard
+from ..keyboards.main_menu import (
+    get_main_menu_keyboard,
+    get_main_reply_keyboard
+)
 from ..keyboards.callbacks import UserStates
 from data.db import get_session
 from utils.logger import logger
@@ -18,17 +21,19 @@ async def cmd_start(message: Message, state: FSMContext):
         f"User started: {message.from_user.id} "
         f"(@{message.from_user.username})"
     )
-
     await state.set_state(UserStates.MAIN_MENU)
-
-    # Получаем клавиатуру из базы данных
-    async with get_session() as session:
-        keyboard = await get_main_menu_keyboard(session)
-        await message.answer(
+    await message.answer(
+        text=(
             "👋 Добро пожаловать!\n\n"
             "Этот бот поможет вам найти информацию о нарушениях слуха.\n"
+        ),
+        reply_markup=await get_main_reply_keyboard()
+    )
+    async with get_session() as session:
+        inline_keyboard = await get_main_menu_keyboard(session)
+        await message.answer(
             "Выберите интересующую вас категорию:",
-            reply_markup=keyboard
+            reply_markup=inline_keyboard
         )
 
 
@@ -43,4 +48,3 @@ async def cmd_help(message: Message):
         "• /help - Показать это сообщение\n\n"
         "Используйте кнопки для навигации по разделам."
     )
-

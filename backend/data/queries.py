@@ -48,4 +48,3 @@ async def get_content_for_button(
     return content if content else (
         "Извините, для этого пункта пока нет информации."
     )
-
