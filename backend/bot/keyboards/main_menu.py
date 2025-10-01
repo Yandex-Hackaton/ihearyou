@@ -70,7 +70,6 @@ async def get_category_buttons_keyboard(
 
     return builder.as_markup()
 
-
 async def get_main_reply_keyboard() -> ReplyKeyboardMarkup:
     """
     Создает реплай-клавиатуру с кнопками «Помощь»,

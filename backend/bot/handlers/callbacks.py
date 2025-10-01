@@ -8,7 +8,6 @@ from aiogram.types import (
 )
 from aiogram.utils.keyboard import InlineKeyboardBuilder
 
-
 from ..keyboards.callbacks import (
     MainMenuCallback,
     ButtonCallback,
