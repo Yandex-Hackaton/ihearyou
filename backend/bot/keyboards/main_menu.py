@@ -1,10 +1,15 @@
-from aiogram.types import InlineKeyboardMarkup
-from aiogram.utils.keyboard import InlineKeyboardBuilder
+from aiogram.types import InlineKeyboardMarkup, ReplyKeyboardMarkup
+from aiogram.utils.keyboard import InlineKeyboardBuilder, ReplyKeyboardBuilder
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlmodel import select
 
 from data.models import Content, Category
-from .callbacks import ButtonCallback, GoToMainMenuCallback, CategoryCallback
+from .callbacks import (
+    AdminCallback,
+    ButtonCallback,
+    GoToMainMenuCallback,
+    CategoryCallback
+)
 
 
 async def add_back_to_main_menu_button(builder: InlineKeyboardBuilder) -> None:
@@ -63,4 +68,30 @@ async def get_category_buttons_keyboard(
         )
         builder.adjust(1)
 
+    return builder.as_markup()
+
+async def get_main_reply_keyboard() -> ReplyKeyboardMarkup:
+    """
+    Создает реплай-клавиатуру с кнопками «Помощь»,
+    «Задать вопрос» и Полезные материалы»
+    """
+    builder = ReplyKeyboardBuilder()
+    builder.button(text="🤝 Помощь")
+    builder.button(text="❓ Задать вопрос")
+    builder.button(text="🗒 Полезные материалы")
+    builder.button(text="✅ К выбору категории")
+    builder.adjust(2)
+    return builder.as_markup(resize_keyboard=True)
+
+
+async def get_admin_answer_keyboard(question_id: int) -> InlineKeyboardMarkup:
+    """Кнопка 'Ответить' для админа."""
+    builder = InlineKeyboardBuilder()
+    builder.button(
+            text="Ответить",
+            callback_data=AdminCallback(
+                action="answer_question",
+                question_id=question_id).pack()
+    )
+    builder.adjust(1)
     return builder.as_markup()

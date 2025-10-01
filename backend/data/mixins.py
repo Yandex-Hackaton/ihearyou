@@ -18,7 +18,7 @@ class BaseInfoMixin(SQLModel):
         nullable=False,
     )
     description: Optional[str] = Field(
-        sa_type=Text(length=Length.TEXT_FIELD.value),
+        sa_type=Text(),
     )
 
 

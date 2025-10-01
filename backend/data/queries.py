@@ -39,4 +39,5 @@ async def get_content_for_button(button_title: str, session: AsyncSession) -> st
     query = select(Content.content).where(Content.title == button_title)
     result = await session.execute(query)
     content = result.scalar_one_or_none()
+
     return content if content else ("Извините, для этого пункта пока нет информации.")

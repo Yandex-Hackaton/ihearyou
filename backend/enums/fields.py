@@ -1,10 +1,11 @@
 import enum
 
 
-@enum.unique
 class Length(enum.Enum):
     TITLE_FIELD = 32
+    PASSWORD_FIELD = 128
     TEXT_FIELD = 512
+    URL_LINK_FIELD = 512
 
 
 @enum.unique

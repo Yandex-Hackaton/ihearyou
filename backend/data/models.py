@@ -1,14 +1,14 @@
 from typing import Optional
 from datetime import datetime, timedelta
 
-from pydantic import AnyUrl
+from pydantic import validator
 from sqlmodel import SQLModel, Field, Relationship
-from sqlalchemy import Column, Integer, BigInteger, DateTime, Text
+from sqlalchemy import Column, Integer, BigInteger, DateTime, Text, String
 from aiogram.enums import UpdateType
 
 from .mixins import BaseInfoMixin, BaseCreatedAtFieldMixin, BaseIDMixin
 from enums.msg import AnswerChoices
-from enums.fields import InitValue, ViewLimits
+from enums.fields import InitValue, ViewLimits, Length
 
 
 class Category(
@@ -35,7 +35,9 @@ class Content(
 ):
     __tablename__ = 'contents'
 
-    url_link: Optional[AnyUrl]
+    url_link: Optional[str] = Field(
+        sa_column=String(Length.URL_LINK_FIELD.value),
+    )
     is_active: bool
     views_count: int = Field(
         default=InitValue.DEFAULT_START_VALUE.value,
@@ -48,10 +50,8 @@ class Content(
 
     category_id: int = Field(foreign_key=f'{Category.__tablename__}.id')
     category: Category = Relationship(back_populates='contents')
-    ratings: list['Rating'] = Relationship(back_populates='content')
 
-    def __str__(self) -> str:
-        return self.title
+    ratings: list['Rating'] = Relationship(back_populates='content')
 
 
 class User(SQLModel, table=True):
@@ -61,7 +61,9 @@ class User(SQLModel, table=True):
         sa_column=Column(BigInteger, primary_key=True, autoincrement=False),
     )
     username: Optional[str] = Field(unique=True, index=True)
-    password: Optional[str]
+    password: Optional[str] = Field(
+        sa_column=String(Length.PASSWORD_FIELD.value),
+    )
     is_active: bool
     is_admin: bool
     registered_at: datetime = Field(
