@@ -3,17 +3,17 @@ from admin.base import CustomModelView
 
 
 class CategoryView(CustomModelView, model=Category):
-    name = 'Категория'
-    name_plural = 'Категории'
+    name = "Категория"
+    name_plural = "Категории"
     icon = "fa-solid fa-folder"
 
     # Названия полей
     column_labels = {
-        Category.id: 'ID',
-        Category.title: 'Название',
-        Category.description: 'Краткое описание',
-        Category.is_active: 'Активна',
-        Category.created_at: 'Дата и время создания',
+        Category.id: "ID",
+        Category.title: "Название",
+        Category.description: "Краткое описание",
+        Category.is_active: "Активна",
+        Category.created_at: "Дата и время создания",
     }
 
     # Поля страницы списка
@@ -43,10 +43,6 @@ class CategoryView(CustomModelView, model=Category):
     def format_datetime(model, attribute):
         return model.created_at.strftime("%d.%m.%Y %H:%M")
 
-    column_formatters = {
-        Category.created_at: format_datetime
-    }
+    column_formatters = {Category.created_at: format_datetime}
 
-    column_formatters_detail = {
-        Category.created_at: format_datetime
-    }
+    column_formatters_detail = {Category.created_at: format_datetime}
