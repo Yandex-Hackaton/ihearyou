@@ -51,13 +51,11 @@ class InteractionEventMiddleware(BaseMiddleware):
             )
             try:
                 await InteractionEventService.save_event(event_obj)
-                user_info = user.id if user else 'Unknown'
+                user_info = user.id if user else "Unknown"
                 logger.debug(
-                    f"Событие {event_type} сохранено "
-                    f"для пользователя {user_info}"
+                    f"Событие {event_type} сохранено " f"для пользователя {user_info}"
                 )
             except Exception as e:
                 logger.error(f"Ошибка при сохранении события: {e}")
 
         return await handler(event, data)
-

@@ -7,19 +7,21 @@ from utils.logger import logger
 
 
 class QuestionView(CustomModelView, model=Question):
-    name = 'Вопрос'
-    name_plural = 'Вопросы'
-    # Запрещаем действия с этой моделью
+    name = "Вопрос"
+    name_plural = "Вопросы"
+    icon = "fa-solid fa-circle-question"
+
+    # Разрешённые действия с моделью
     can_create = False
     can_edit = True
     can_delete = False
 
     # Название полей
     column_labels = {
-        Question.id: 'ID',
-        Question.text: 'Вопрос',
-        Question.user: 'Пользователь',
-        Question.created_at: 'Дата и время получения вопроса',
+        Question.id: "ID",
+        Question.text: "Вопрос",
+        Question.user: "Пользователь",
+        Question.created_at: "Дата и время получения вопроса",
     }
 
     # Поля страницы списка
@@ -41,20 +43,14 @@ class QuestionView(CustomModelView, model=Question):
 
     # Поля доступные для изменений
     form_columns = [
-        'answer',
+        "answer",
     ]
 
     def list_query(self, request: Request):
-        return (
-            super().list_query(request)
-            .options(selectinload(Question.user))
-        )
+        return super().list_query(request).options(selectinload(Question.user))
 
     def details_query(self, request: Request):
-        return (
-            super().details_query(request)
-            .options(selectinload(Question.user))
-        )
+        return super().details_query(request).options(selectinload(Question.user))
 
     @staticmethod
     def format_user(model, attribute):
@@ -66,12 +62,12 @@ class QuestionView(CustomModelView, model=Question):
 
     column_formatters = {
         Question.user: format_user,
-        Question.created_at: format_datetime
+        Question.created_at: format_datetime,
     }
 
     column_formatters_detail = {
         Question.user: format_user,
-        Question.created_at: format_datetime
+        Question.created_at: format_datetime,
     }
 
     async def on_model_change(self, data, model, is_created, request):
@@ -80,16 +76,10 @@ class QuestionView(CustomModelView, model=Question):
         model_id = self._get_model_id(model)
 
         if is_created:
-            logger.info(
-                f"Admin created {model_name} (ID: {model_id})"
-            )
+            logger.info(f"Admin created {model_name} (ID: {model_id})")
         else:
             # Проверяем, был ли добавлен ответ
-            if hasattr(model, 'answer') and model.answer:
-                logger.info(
-                    f"Admin answered {model_name} (ID: {model_id})"
-                )
+            if hasattr(model, "answer") and model.answer:
+                logger.info(f"Admin answered {model_name} (ID: {model_id})")
             else:
-                logger.info(
-                    f"Admin updated {model_name} (ID: {model_id})"
-                )
+                logger.info(f"Admin updated {model_name} (ID: {model_id})")
