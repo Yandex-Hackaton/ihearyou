@@ -1,4 +1,5 @@
 import os
+from datetime import datetime
 from aiogram import Router, F
 from aiogram.fsm.context import FSMContext
 from aiogram.types import (
@@ -8,7 +9,9 @@ from aiogram.types import (
 )
 from aiogram.utils.keyboard import InlineKeyboardBuilder
 
+from sqlalchemy import select
 from ..keyboards.callbacks import (
+    AdminCallback,
     MainMenuCallback,
     ButtonCallback,
     FeedbackCallback,
@@ -29,6 +32,8 @@ from utils.logger import logger
 callback_router = Router()
 
 ADMINS = [int(admin_id) for admin_id in os.getenv("ADMINS", "").split(',')]
+# ADMINS = [int(admin_id) for admin_id in os.getenv("1046168795", "1046168795").split(',')]
+ADMIN_QUESTION_URL = "https://www.ihearyou.ru//admin/question/details/"
 
 
 @callback_router.callback_query(F.data.startswith("category:"))
@@ -65,7 +70,7 @@ async def handle_category_callback(callback: CallbackQuery, state: FSMContext):
         await callback.answer()
 
     except Exception as e:
-        logger.error(
+        logger.exception(
             f"Category callback error: {e} " f"(user: {callback.from_user.id})"
         )
         await callback.answer("❌ Ошибка обработки запроса", show_alert=True)
@@ -116,7 +121,7 @@ async def handle_main_menu_callback(callback: CallbackQuery, state: FSMContext):
         await callback.answer()
 
     except Exception as e:
-        logger.error(
+        logger.exception(
             f"Main menu callback error: {e} " f"(user: {callback.from_user.id})"
         )
         await callback.answer("❌ Ошибка обработки запроса", show_alert=True)
@@ -140,7 +145,7 @@ async def handle_go_to_main_menu_callback(callback: CallbackQuery, state: FSMCon
         await callback.answer()
 
     except Exception as e:
-        logger.error(f"Go to main menu error: {e} " f"(user: {callback.from_user.id})")
+        logger.exception(f"Go to main menu error: {e} " f"(user: {callback.from_user.id})")
         await callback.answer("❌ Ошибка обработки запроса", show_alert=True)
 
 
@@ -211,7 +216,7 @@ async def handle_button_callback(callback: CallbackQuery, state: FSMContext):
         await callback.answer()
 
     except Exception as e:
-        logger.error(
+        logger.exception(
             f"Button callback error: {e} "
             f"(user: {callback.from_user.id})"
         )
@@ -294,6 +299,7 @@ async def process_question(message: Message, state: FSMContext):
             logger.info(
                 f"New question #{new_question.id} "
                 f"from user {message.from_user.id}"
+                f"<i>Ссылка: {ADMIN_QUESTION_URL}{new_question.id}</i>"
             )
 
             await message.answer(
@@ -307,6 +313,7 @@ async def process_question(message: Message, state: FSMContext):
                 f"<b>От пользователя:</b> @{user.username} "
                 f"(ID: {user.telegram_id})\n"
                 f"<b>Текст вопроса:</b>\n{message.text}"
+                f"<i>Ссылка: {ADMIN_QUESTION_URL}{new_question.id}</i>"
             )
             # Отправляем уведомление всем админам
             for admin_id in ADMINS:
@@ -314,19 +321,19 @@ async def process_question(message: Message, state: FSMContext):
                     await message.bot.send_message(
                         chat_id=admin_id,
                         text=admin_message,
-                        reply_markup=get_admin_answer_keyboard(
+                        reply_markup=await get_admin_answer_keyboard(
                             new_question.id
                         ),
                         parse_mode="HTML"
                     )
                 except Exception as e:
-                    logger.error(
+                    logger.exception(
                         "Failed to send question "
                         f"to admin {admin_id}: {e}"
                     )
 
     except Exception as e:
-        logger.error(
+        logger.exception(
             "Error processing question from user "
             f"{message.from_user.id}: {e}"
             )
@@ -400,7 +407,7 @@ async def handle_feedback_callback(
             )
 
     except Exception as e:
-        logger.error(
+        logger.exception(
             f"Feedback callback error: {e} "
             f"(user: {callback.from_user.id})"
         )
@@ -408,3 +415,78 @@ async def handle_feedback_callback(
             "❌ Ошибка обработки запроса",
             show_alert=True
         )
+
+
+@callback_router.callback_query(
+        AdminCallback.filter(F.action == "answer_question")
+    )
+async def start_answer(
+    query: CallbackQuery,
+    callback_data: AdminCallback,
+    state: FSMContext
+):
+    """
+    Обрабатывает нажатие админом кнопки 'Ответить'.
+    Переводит админа в состояние ожидания ответа.
+    """
+    question_id = callback_data.question_id
+    await state.update_data(question_id=question_id)
+    await state.set_state(UserStates.ANSWER)
+    await query.message.answer(f"Введите ответ на вопрос #{question_id}:")
+    await query.answer()
+
+
+@callback_router.message(UserStates.ANSWER)
+async def process_answer(message: Message, state: FSMContext):
+    """
+    Принимает ответ от админа, сохраняет в БД и отправляет пользователю.
+    """
+    if not message.text:
+        await message.answer("Пожалуйста, введите ответ текстом.")
+        return
+
+    data = await state.get_data()
+    question_id = data.get("question_id")
+
+    if not question_id:
+        await message.answer(
+            "Произошла ошибка, не удалось определить вопрос. "
+            "Попробуйте снова."
+        )
+        await state.clear()
+        return
+    user_id_to_notify = None
+
+    async with get_session() as session:
+        stmt = select(Question).where(Question.id == question_id)
+        result = await session.execute(stmt)
+        question = result.scalar_one_or_none()
+        if not question:
+            await message.answer(
+                f"Вопрос #{question_id} не найден в базе данных."
+            )
+            await state.clear()
+            return
+        question.answer = message.text
+        user_id_to_notify = question.user_id
+        await session.commit()
+    user_message = (
+        f"<b>✅ Ответ на ваш вопрос от {datetime.datetime.now().strftime('%d.%m.%Y %H:%M')}</b>\n\n"
+        f"{message.text}"
+    )
+
+    try:
+        await message.bot.send_message(
+            chat_id=user_id_to_notify,
+            text=user_message,
+            parse_mode="HTML"
+        )
+        await message.answer(
+            f"✅ Ответ на вопрос #{question_id} "
+            "успешно отправлен пользователю."
+        )
+    except Exception as e:
+        await message.answer(
+            "⚠️ Не удалось отправить ответ пользователю "
+            f"{user_id_to_notify}. Ошибка: {e}")
+    await state.clear()
