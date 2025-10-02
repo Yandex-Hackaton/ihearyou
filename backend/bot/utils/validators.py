@@ -1,3 +1,4 @@
+import re
 from typing import Any
 
 from aiogram.types import Message, PhotoSize
@@ -77,10 +78,8 @@ def format_description_with_breaks(description: str) -> str:
     if not description:
         return ""
 
-    import re
-
-    # Добавляем \n\n после эмодзи
-    emoji_pattern = r'(💔|❓|💡|📖|🤗|👶|🎧|🔊)'
-    formatted = re.sub(emoji_pattern, r'\1\n\n', description)
+    emoji_pattern = r'(💔|❓|💡|📖|🤗|👶|🎧|🔊|🧑‍🤝‍🧑|👩‍👩‍👧|🎓|📚|🕰|🤝|❤️|✨|🌈|🌷|👦|👧|👨‍⚕️|🧑‍⚕️)'
+    dot_space_emoji_pattern = r'\.\s+(' + emoji_pattern[1:-1] + r')'
+    formatted = re.sub(dot_space_emoji_pattern, r'.\n\n\1', description)
 
     return formatted

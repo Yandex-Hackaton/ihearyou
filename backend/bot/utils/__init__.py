@@ -1,4 +1,4 @@
-from .message_utils import safe_edit_message
+from .message_utils import safe_edit_message, safe_delete_and_send
 from .validators import (
     ValidationError,
     ValidationResult,
@@ -11,6 +11,7 @@ from .validators import (
 
 __all__ = [
     'safe_edit_message',
+    'safe_delete_and_send',
     'ValidationError',
     'ValidationResult',
     'Validator',

@@ -29,7 +29,7 @@ from bot.services.content_service import ContentService
 from bot.services.question_service import QuestionService
 from bot.services.rating_service import RatingService
 from bot.filters import Filters
-from bot.utils import safe_edit_message
+from bot.utils import safe_edit_message, safe_delete_and_send
 
 logger = getLogger(__name__)
 user_router = Router()
@@ -68,7 +68,7 @@ async def handle_category_callback(callback: CallbackQuery, state: FSMContext):
                 callback_data.category_id, session
             )
 
-            await safe_edit_message(
+            await safe_delete_and_send(
                 callback,
                 f"📂 {category.title}\n\n"
                 f"{(category.description or 'Выберите интересующий вас раздел:')}",
@@ -98,7 +98,7 @@ async def handle_go_to_main_menu_callback(
 
         async with get_session() as session:
             keyboard = await get_main_menu_keyboard(session)
-            await safe_edit_message(
+            await safe_delete_and_send(
                 callback,
                 "🏠 Главное меню\n\nВыберите интересующую вас категорию:",
                 reply_markup=keyboard,
@@ -265,7 +265,7 @@ async def handle_feedback_callback(
                 "Пожалуйста, оцените материал."
             )
             keyboard = get_rating_keyboard(content_id)
-            await safe_edit_message(
+            await safe_delete_and_send(
                 callback,
                 text,
                 reply_markup=keyboard
@@ -288,7 +288,7 @@ async def handle_feedback_callback(
                                 category_id=button.category_id).pack()
                         )
                     )
-                await safe_edit_message(
+                await safe_delete_and_send(
                     callback,
                     text,
                     reply_markup=builder.as_markup()
@@ -345,7 +345,7 @@ async def handle_rating_callback(
 
             logger.info(f"Rating saved: user {user_id}, content {content_id}, score={rating}")
 
-        await safe_edit_message(
+        await safe_delete_and_send(
             callback,
             text="Спасибо за оценку! ⭐",
             reply_markup=None
