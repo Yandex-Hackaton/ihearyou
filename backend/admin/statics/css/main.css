@@ -1170,3 +1170,45 @@ body {
 .btn-icon {
   border-radius: 10px !important;
 }
+
+.btn-custom {
+  font-family: var(--font-montserrat);
+  font-weight: 600;
+  padding: 14px 28px;
+  border-radius: var(--radius-md);
+  transition: all var(--transition-normal);
+  position: relative;
+  overflow: hidden;
+  box-shadow: var(--shadow-sm);
+}
+
+
+.btn-danger.btn-custom {
+  background: linear-gradient(135deg, #EF4444 0%, #DC2626 100%) !important;
+  border: none !important;
+  color: white !important;
+  box-shadow: 0 4px 10px rgba(220, 38, 38, 0.3);
+}
+
+.btn-danger.btn-custom:hover {
+  background: linear-gradient(135deg, #F87171 0%, #EF4444 100%) !important;
+  transform: translateY(-2px);
+  box-shadow: 0 6px 14px rgba(220, 38, 38, 0.4);
+}
+
+
+.btn-secondary.btn-custom {
+  background: linear-gradient(135deg, #E5E7EB 0%, #D1D5DB 100%) !important;
+  border: none !important;
+  color: var(--text-primary) !important;
+}
+
+.btn-secondary.btn-custom:hover {
+  background: linear-gradient(135deg, #F3F4F6 0%, #E5E7EB 100%) !important;
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-md);
+}
+
+.card-footer {
+  margin-left: 0px;
+}
