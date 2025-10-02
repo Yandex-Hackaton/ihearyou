@@ -2,7 +2,7 @@ from datetime import datetime, timedelta
 from typing import Optional
 
 from aiogram.enums import UpdateType
-from sqlalchemy import BigInteger, Column, DateTime, Integer, String, Text
+from sqlalchemy import BigInteger, Column, DateTime, Integer, String, Text, ForeignKey
 from sqlmodel import Field, Relationship, SQLModel
 
 from enums.fields import InitValue, Length, ViewLimits
@@ -85,7 +85,13 @@ class Question(BaseIDMixin, BaseCreatedAtFieldMixin, table=True):
     text: Optional[str] = Field(sa_type=Text())
     answer_text: Optional[str] = Field(sa_type=Text())
 
-    user_id: int = Field(foreign_key=f'{User.__tablename__}.telegram_id')
+    user_id: int = Field(
+        sa_column=Column(
+            BigInteger, 
+            ForeignKey('users.telegram_id'), 
+            nullable=False
+        )
+    )
     user: User = Relationship(back_populates='questions')
 
     def __str__(self) -> str:
@@ -106,7 +112,7 @@ class InteractionEvent(
     __tablename__ = 'interaction_events'
 
     event_type: UpdateType
-    user_id: int
+    user_id: int = Field(sa_column=Column(BigInteger, nullable=False))
     message_text: Optional[str]
     callback_data: Optional[str]
 
@@ -126,7 +132,13 @@ class Rating(
     is_helpful: Optional[bool]
     score: Optional[int] = Field(default=None)
 
-    user_id: int = Field(foreign_key=f'{User.__tablename__}.telegram_id')
+    user_id: int = Field(
+        sa_column=Column(
+            BigInteger, 
+            ForeignKey('users.telegram_id'), 
+            nullable=False
+        )
+    )
     user: User = Relationship(back_populates='ratings')
 
     content_id: int = Field(foreign_key=f'{Content.__tablename__}.id')
