@@ -106,14 +106,12 @@ class InteractionEvent(
     __tablename__ = 'interaction_events'
 
     event_type: UpdateType
-    user_id: Optional[int]
-    username: Optional[str]
+    user_id: int
     message_text: Optional[str]
     callback_data: Optional[str]
 
     def __str__(self) -> str:
-        username_or_id = self.username or self.user_id
-        return f'Event #{self.id}: {self.event_type} from {username_or_id}'
+        return f"Event #{self.id}: {self.event_type}"
 
 
 class Rating(
