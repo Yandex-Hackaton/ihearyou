@@ -1,4 +1,3 @@
-import os
 from datetime import datetime
 from aiogram import Router, F
 from aiogram.fsm.context import FSMContext
@@ -10,6 +9,7 @@ from aiogram.types import (
 from aiogram.utils.keyboard import InlineKeyboardBuilder
 
 from sqlalchemy import select
+from ..config import ADMIN_QUESTION_URL, ADMINS
 from ..keyboards.callbacks import (
     AdminCallback,
     MainMenuCallback,
@@ -31,19 +31,6 @@ from utils.logger import logger
 
 callback_router = Router()
 
-admins_raw_str = os.getenv("ADMINS", "")
-ADMINS = []
-if admins_raw_str:
-    for admin_id_str in admins_raw_str.split(','):
-        try:
-            ADMINS.append(int(admin_id_str.strip()))
-        except ValueError:
-            logger.warning(
-                f"Некорректный ID администратора в .env: '{admin_id_str}'."
-                )
-
-ADMIN_QUESTION_URL = "https://www.ihearyou.ru//admin/question/details/"
-
 
 @callback_router.callback_query(F.data.startswith("category:"))
 async def handle_category_callback(callback: CallbackQuery, state: FSMContext):
@@ -58,11 +45,20 @@ async def handle_category_callback(callback: CallbackQuery, state: FSMContext):
         await state.set_state(UserStates.CATEGORY_VIEW)
 
         async with get_session() as session:
-            category = await get_category_by_id(callback_data.category_id, session)
+            category = await get_category_by_id(
+                callback_data.category_id,
+                session
+            )
 
             if not category:
-                logger.warning(f"Category not found: {callback_data.category_id}")
-                await callback.answer("❌ Категория не найдена", show_alert=True)
+                logger.warning(
+                    "Category not found: "
+                    f"{callback_data.category_id}"
+                )
+                await callback.answer(
+                    "❌ Категория не найдена",
+                    show_alert=True
+                )
                 return
 
             keyboard = await get_category_buttons_keyboard(
@@ -86,7 +82,10 @@ async def handle_category_callback(callback: CallbackQuery, state: FSMContext):
 
 
 @callback_router.callback_query(F.data.startswith("main_menu:"))
-async def handle_main_menu_callback(callback: CallbackQuery, state: FSMContext):
+async def handle_main_menu_callback(
+    callback: CallbackQuery,
+    state: FSMContext
+):
     """Обработка callback для главного меню"""
     try:
         callback_data = MainMenuCallback.unpack(callback.data)
@@ -98,7 +97,8 @@ async def handle_main_menu_callback(callback: CallbackQuery, state: FSMContext):
             async with get_session() as session:
                 keyboard = await get_main_menu_keyboard(session)
                 await callback.message.edit_text(
-                    "🏠 Главное меню\n\n" "Выберите интересующую вас категорию:",
+                    "🏠 Главное меню\n\n"
+                    "Выберите интересующую вас категорию:",
                     reply_markup=keyboard,
                 )
 
@@ -106,14 +106,20 @@ async def handle_main_menu_callback(callback: CallbackQuery, state: FSMContext):
             await state.set_state(UserStates.CATEGORY_VIEW)
 
             async with get_session() as session:
-                category = await get_category_by_id(callback_data.category_id, session)
+                category = await get_category_by_id(
+                    callback_data.category_id,
+                    session
+                )
 
                 if not category:
                     logger.warning(
                         f"Category not found in main menu: "
                         f"{callback_data.category_id}"
                     )
-                    await callback.answer("❌ Категория не найдена", show_alert=True)
+                    await callback.answer(
+                        "❌ Категория не найдена",
+                        show_alert=True
+                    )
                     return
 
                 keyboard = await get_category_buttons_keyboard(
@@ -131,13 +137,17 @@ async def handle_main_menu_callback(callback: CallbackQuery, state: FSMContext):
 
     except Exception as e:
         logger.exception(
-            f"Main menu callback error: {e} " f"(user: {callback.from_user.id})"
+            f"Main menu callback error: {e} "
+            f"(user: {callback.from_user.id})"
         )
         await callback.answer("❌ Ошибка обработки запроса", show_alert=True)
 
 
 @callback_router.callback_query(F.data == "go_main")
-async def handle_go_to_main_menu_callback(callback: CallbackQuery, state: FSMContext):
+async def handle_go_to_main_menu_callback(
+    callback: CallbackQuery,
+    state: FSMContext
+):
     """Обработка callback для возврата в главное меню"""
     try:
         logger.info(f"Go to main menu: {callback.from_user.id}")
@@ -154,7 +164,10 @@ async def handle_go_to_main_menu_callback(callback: CallbackQuery, state: FSMCon
         await callback.answer()
 
     except Exception as e:
-        logger.exception(f"Go to main menu error: {e} " f"(user: {callback.from_user.id})")
+        logger.exception(
+            f"Go to main menu error: {e} "
+            f"(user: {callback.from_user.id})"
+        )
         await callback.answer("❌ Ошибка обработки запроса", show_alert=True)
 
 
@@ -393,7 +406,6 @@ async def handle_feedback_callback(
                 "Спасибо за обратную связь! "
                 "Мы постараемся улучшить материал. 🙏"
             )
-            # Чтобы вернуть кнопку "Назад", нужно снова получить категорию
             async with get_session() as session:
                 button = await get_button_by_id(content_id, session)
                 builder = InlineKeyboardBuilder()
@@ -472,7 +484,7 @@ async def process_answer(message: Message, state: FSMContext):
         question = result.scalar_one_or_none()
         if not question:
             await message.answer(
-                f"Вопрос #{question_id} не найден в базе данных."
+                f"Вопрос # {question_id} не найден в базе данных."
             )
             await state.clear()
             return
@@ -480,7 +492,8 @@ async def process_answer(message: Message, state: FSMContext):
         user_id_to_notify = question.user_id
         await session.commit()
     user_message = (
-        f"<b>✅ Ответ на ваш вопрос от {datetime.datetime.now().strftime('%d.%m.%Y %H:%M')}</b>\n\n"
+        "<b>✅ Ответ на ваш вопрос от "
+        f"{datetime.datetime.now().strftime('%d.%m.%Y %H:%M')}</b>\n\n"
         f"{message.text}"
     )
 
