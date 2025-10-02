@@ -120,7 +120,7 @@ async def get_admin_inline_keyboard() -> InlineKeyboardMarkup:
     )
     builder.button(
         text="📊 К статистике",
-        url="https://stepaxvii.ru/admin/interactionevent/list"
+        url="https://stepaxvii.ru/admin/interaction-event/list"
     )
     builder.adjust(1)
     return builder.as_markup()
@@ -132,7 +132,7 @@ async def get_reminder_type_keyboard() -> InlineKeyboardMarkup:
     """
     builder = InlineKeyboardBuilder()
     builder.button(
-        text="От бота",
+        text="🤖От бота",
         callback_data=AdminCallback(
             action="send_reminder",
             question_id=None,
@@ -140,7 +140,7 @@ async def get_reminder_type_keyboard() -> InlineKeyboardMarkup:
         ).pack()
     )
     builder.button(
-        text="От Аури",
+        text="🦊От Аури",
         callback_data=AdminCallback(
             action="send_reminder",
             question_id=None,
@@ -148,7 +148,7 @@ async def get_reminder_type_keyboard() -> InlineKeyboardMarkup:
         ).pack()
     )
     builder.button(
-        text="Отмена",
+        text="❌Отмена",
         callback_data=AdminCallback(
             action="cancel",
             question_id=None,

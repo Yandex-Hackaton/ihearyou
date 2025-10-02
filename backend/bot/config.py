@@ -1,17 +1,9 @@
-import os
+import logging
 
-from utils.logger import logger
+from decouple import config
 
+logger = logging.getLogger(__name__)
 
-admins_raw_str = os.getenv("ADMINS", "")
-ADMINS = []
-if admins_raw_str:
-    for admin_id_str in admins_raw_str.split(','):
-        try:
-            ADMINS.append(int(admin_id_str.strip()))
-        except ValueError:
-            logger.warning(
-                f"Некорректный ID администратора в .env: '{admin_id_str}'."
-                )
+ADMINS = list(map(int, config('ADMINS').split()))
 
-ADMIN_QUESTION_URL = "https://www.ihearyou.ru//admin/question/details/"
+ADMIN_QUESTION_URL = "https://www.stepaxvii.ru//admin/question/details/"
