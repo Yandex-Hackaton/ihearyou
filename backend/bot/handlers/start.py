@@ -62,3 +62,26 @@ async def cmd_help(message: Message):
         " /start - Главное меню\n\n"
         "Так же используйте кнопки клавиатуры для навигации по разделам."
     )
+
+
+@start_router.message(lambda message: message.text == "🗒 Полезные материалы")
+async def handle_useful_materials(message: Message):
+    """Обработчик кнопки 'Полезные материалы'"""
+    logger.info(f"Useful materials requested: {message.from_user.id}")
+    
+    text = (
+        "<b>📚 Полезные материалы</b>\n\n"
+        '<a href="https://www.ihearyou.ru">Наш сайт</a>\n\n'
+        '<a href="https://ятебяслышу.рф/ihearyouclub">Клуб "Я тебя слышу"</a>\n\n'
+        '<a href="https://vk.com/ihear_you">VK</a>\n'
+        '<a href="https://dzen.ru/ihearyou">Дзен</a>\n\n'
+        "<b>Подкаст \"Не понаслышке\":</b>\n"
+        '<a href="https://podcasts.apple.com/ru/podcast/не-понаслышке/id1530818421">Подкасты Apple</a>\n'
+        '<a href="https://music.yandex.ru/album/12068742">Яндекс Музыка</a>'
+    )
+    
+    await message.answer(
+        text,
+        parse_mode="HTML",
+        disable_web_page_preview=True
+    )

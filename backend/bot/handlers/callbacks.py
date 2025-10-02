@@ -155,13 +155,13 @@ async def handle_button_callback(callback: CallbackQuery, state: FSMContext):
                 f"Updated views for content_id {button.id} "
                 f"to {button.views_count}"
             )
-            text = f"📌 {button.title}\n\n"
+            text = f"<b>{button.title}</b>\n\n"
 
             if button.description:
-                text += f"📝 {button.description}\n\n"
+                text += f"{button.description}\n\n"
 
             if button.url_link:
-                text += f"🔗 {button.url_link}"
+                text += f'<a href="{button.url_link}">Ознакомиться подробнее</a>'
             else:
                 text += (
                     "ℹ️ Информация по данному разделу "
@@ -174,6 +174,7 @@ async def handle_button_callback(callback: CallbackQuery, state: FSMContext):
             await callback.message.edit_text(
                 text,
                 reply_markup=keyboard,
+                parse_mode="HTML",
                 disable_web_page_preview=True
             )
 
@@ -184,10 +185,7 @@ async def handle_button_callback(callback: CallbackQuery, state: FSMContext):
             f"Button callback error: {e} "
             f"(user: {callback.from_user.id})"
         )
-        await callback.answer(
-            "❌ Ошибка обработки запроса",
-            show_alert=True
-        )
+        await callback.answer("❌ Ошибка обработки запроса", show_alert=True)
 
 
 @callback_router.message(F.text == "✅ К выбору категории")
