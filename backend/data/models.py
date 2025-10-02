@@ -38,6 +38,12 @@ class Content(
     url_link: Optional[str] = Field(
         sa_column=String(Length.URL_LINK_FIELD.value),
     )
+    image_url: Optional[str] = Field(
+        sa_column=String(Length.URL_LINK_FIELD.value),
+    )
+    file_id: Optional[str] = Field(
+        sa_column=String(255),
+    )
     is_active: bool
     views_count: int = Field(
         default=InitValue.DEFAULT_START_VALUE.value,

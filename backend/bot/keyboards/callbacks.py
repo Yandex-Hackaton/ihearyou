@@ -27,6 +27,22 @@ class AdminCallback(CallbackData, prefix="admin"):
     reminder_type: Optional[str] = None
 
 
+class AdminCategoryCallback(CallbackData, prefix="admin_category"):
+    """Callback для выбора категории админом"""
+    category_id: int
+
+
+class AdminContentCallback(CallbackData, prefix="admin_content"):
+    """Callback для выбора контента админом"""
+    content_id: int
+
+
+class AdminContentActionCallback(CallbackData, prefix="admin_action"):
+    """Callback для действий с контентом"""
+    action: str
+    content_id: int
+
+
 class FeedbackCallback(CallbackData, prefix="feedback"):
     action: str
     content_id: int
@@ -46,3 +62,9 @@ class UserStates(StatesGroup):
     QUESTION = State()  # Состояние ожидания вопроса от пользователя
     ANSWER = State()   # Состояние ожидания ответа от админа
     REVIEW = State()   # Состояние ожидания оценки (1-5)
+    UPLOADING_IMAGE = State()  # Состояние загрузки изображения
+    
+    # Админские состояния
+    ADMIN_CATEGORY_VIEW = State()  # Админ просматривает категории
+    ADMIN_CONTENT_VIEW = State()  # Админ просматривает контент категории
+    ADMIN_CONTENT_MANAGE = State()  # Админ управляет контентом

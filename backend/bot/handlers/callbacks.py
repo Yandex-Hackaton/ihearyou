@@ -13,6 +13,7 @@ from aiogram.types import (
     CallbackQuery,
     ChatMemberUpdated,
     InlineKeyboardButton,
+    InputMediaPhoto,
     Message,
 )
 from aiogram.types import User as TG_User
@@ -47,6 +48,7 @@ from ..keyboards.main_menu import (
     get_admin_inline_keyboard
 )
 from ..services.reminder_service import ReminderService
+from utils.url_utils import clean_url, is_valid_image_url
 
 callback_router = Router()
 logger = getLogger(__name__)
@@ -167,17 +169,100 @@ async def handle_button_callback(callback: CallbackQuery, state: FSMContext):
                     "ℹ️ Информация по данному разделу "
                     "будет добавлена в ближайшее время."
                 )
+            
             keyboard = get_feedback_keyboard(
                 content_id=button.id,
                 category_id=button.category_id
             )
-            await callback.message.edit_text(
-                text,
-                reply_markup=keyboard,
-                parse_mode="HTML",
-                disable_web_page_preview=True
-            )
 
+            # Используем file_id если доступен, иначе URL
+            if button.file_id:
+                logger.info(f"Displaying image for content {button.id} using file_id: {button.file_id}")
+                try:
+                    await callback.message.edit_media(
+                        media=InputMediaPhoto(
+                            media=button.file_id,
+                            caption=text,
+                            parse_mode="HTML"
+                        ),
+                        reply_markup=keyboard
+                    )
+                    logger.info(f"Successfully displayed image for content {button.id}")
+                except Exception as e:
+                    logger.warning(f"Failed to edit media for content {button.id}, falling back to photo: {e}")
+                    # Fallback: отправляем новое сообщение с изображением
+                    try:
+                        await callback.message.answer_photo(
+                            photo=button.file_id,
+                            caption=text,
+                            reply_markup=keyboard,
+                            parse_mode="HTML"
+                        )
+                        await callback.message.delete()
+                        logger.info(f"Successfully sent photo for content {button.id}")
+                    except Exception as e2:
+                        logger.warning(f"Failed to send photo for content {button.id}, falling back to text: {e2}")
+                        await callback.message.edit_text(
+                            text,
+                            reply_markup=keyboard,
+                            parse_mode="HTML",
+                            disable_web_page_preview=True
+                        )
+                        logger.info(f"Successfully displayed text for content {button.id}")
+            elif button.image_url:
+                # Очищаем URL изображения перед проверкой
+                image_url = clean_url(button.image_url)
+
+                if image_url and image_url.strip() and is_valid_image_url(image_url):
+                    logger.info(f"Displaying image for content {button.id} using URL: {image_url}")
+                    try:
+                        await callback.message.edit_media(
+                            media=InputMediaPhoto(
+                                media=image_url,
+                                caption=text,
+                                parse_mode="HTML"
+                            ),
+                            reply_markup=keyboard
+                        )
+                        logger.info(f"Successfully displayed image for content {button.id}")
+                    except Exception as e:
+                        logger.warning(f"Failed to edit media for content {button.id}, falling back to photo: {e}")
+                        # Fallback: отправляем новое сообщение с изображением
+                        try:
+                            await callback.message.answer_photo(
+                                photo=image_url,
+                                caption=text,
+                                reply_markup=keyboard,
+                                parse_mode="HTML"
+                            )
+                            await callback.message.delete()
+                            logger.info(f"Successfully sent photo for content {button.id}")
+                        except Exception as e2:
+                            logger.warning(f"Failed to send photo for content {button.id}, falling back to text: {e2}")
+                            await callback.message.edit_text(
+                                text,
+                                reply_markup=keyboard,
+                                parse_mode="HTML",
+                                disable_web_page_preview=True
+                            )
+                            logger.info(f"Successfully displayed text for content {button.id}")
+                else:
+                    # Если есть image_url, но он невалидный, показываем только текст
+                    logger.warning(f"Invalid image URL for content {button.id}: {button.image_url}")
+                    await callback.message.edit_text(
+                        text,
+                        reply_markup=keyboard,
+                        parse_mode="HTML",
+                        disable_web_page_preview=True
+                    )
+            else:
+                # Нет изображения
+                await callback.message.edit_text(
+                    text,
+                    reply_markup=keyboard,
+                    parse_mode="HTML",
+                    disable_web_page_preview=True
+                )
         await callback.answer()
 
     except Exception as e:

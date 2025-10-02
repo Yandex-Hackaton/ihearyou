@@ -112,6 +112,7 @@ async def get_admin_inline_keyboard() -> InlineKeyboardMarkup:
     Создает inline клавиатуру для админов с кнопками:
     - К вопросам
     - К статистике
+    - Управление контентом
     """
     builder = InlineKeyboardBuilder()
     builder.button(
@@ -121,6 +122,10 @@ async def get_admin_inline_keyboard() -> InlineKeyboardMarkup:
     builder.button(
         text="📊 К статистике",
         url="https://stepaxvii.ru/admin/interaction-event/list"
+    )
+    builder.button(
+        text="🔧 Управление контентом",
+        callback_data=AdminCallback(action="manage_content").pack()
     )
     builder.adjust(1)
     return builder.as_markup()
