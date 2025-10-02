@@ -12,11 +12,12 @@ from sqlalchemy import select
 from ..config import ADMIN_QUESTION_URL, ADMINS
 from ..keyboards.callbacks import (
     AdminCallback,
-    MainMenuCallback,
     ButtonCallback,
+    CategoryCallback,
     FeedbackCallback,
-    UserStates,
-    CategoryCallback
+    MainMenuCallback,
+    RatingCallback,
+    UserStates
 )
 from ..keyboards.main_menu import (
     get_admin_answer_keyboard,
@@ -191,8 +192,6 @@ async def handle_button_callback(callback: CallbackQuery, state: FSMContext):
                 logger.warning(f"Button not found: {callback_data.button_id}")
                 await callback.answer("❌ Кнопка не найдена", show_alert=True)
                 return
-            # 1. Увеличиваем счетчик просмотров
-            # Ваша модель называется Content, а поле views_count
             button.views_count += 1
             session.add(button)
             await session.commit()
@@ -365,13 +364,15 @@ async def help_request(message: Message):
 @callback_router.callback_query(FeedbackCallback.filter())
 async def handle_feedback_callback(
     callback: CallbackQuery,
-    callback_data: FeedbackCallback
+    callback_data: FeedbackCallback,
+    state: FSMContext
 ):
     """Обработка обратной связи (полезно/не помогло)"""
     try:
         user_id = callback.from_user.id
         content_id = callback_data.content_id
         action = callback_data.action
+        await state.set_state(UserStates.REVIEW)
 
         if action == "helpful":
             logger.info(f"User {user_id} found content {content_id} helpful.")
@@ -421,6 +422,44 @@ async def handle_feedback_callback(
         )
         await callback.answer(
             "❌ Ошибка обработки запроса",
+            show_alert=True
+        )
+
+
+@callback_router.callback_query(
+        UserStates.REVIEW,
+        RatingCallback.filter()
+    )
+async def handle_rating_callback(
+    callback: CallbackQuery,
+    callback_data: RatingCallback,
+    state: FSMContext
+):
+    """Обработка нажатия на кнопку с оценкой ⭐."""
+    try:
+        user_id = callback.from_user.id
+        content_id = callback_data.content_id
+        rating = callback_data.rating
+
+        logger.info(f"User {user_id} rated content {content_id} with {rating}.")
+
+        # Редактируем сообщение: изменяем текст и убираем клавиатуру
+        await callback.message.edit_text(
+            text="Спасибо за обратную связь!",
+            reply_markup=None  # Убирает клавиатуру
+        )
+        await callback.answer()
+
+        # Сбрасываем состояние пользователя
+        await state.clear()
+
+    except Exception as e:
+        logger.exception(
+            f"Rating callback error: {e} "
+            f"(user: {callback.from_user.id})"
+        )
+        await callback.answer(
+            "❌ Ошибка обработки оценки",
             show_alert=True
         )
 
