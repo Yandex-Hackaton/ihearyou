@@ -7,7 +7,9 @@
         <div class="flex-grow-1 me-2">
           <div class="card">
             <div class="card-header">
-              <h3 class="card-title">{{ model_view.name_plural }}</h3>
+              <h3 class="card-title">
+                {{ model_view.name_plural }}
+              </h3>
               <div class="ms-auto">
                 {% if model_view.can_export %}
                 {% if model_view.export_types | length > 1 %}
@@ -42,7 +44,7 @@
                 {% endif %}
               </div>
             </div>
-            <div class="card-body border-bottom py-3">
+            <!-- <div class="card-body border-bottom py-3">
               <div class="d-flex justify-content-between">
                 <div class="dropdown col-4">
                   <button {% if not model_view.can_delete and not model_view._custom_actions_in_list %} disabled {% endif %}
@@ -77,16 +79,16 @@
                 <div class="col-md-4 text-muted">
                   <div class="input-group">
                     <input id="search-input" type="text" class="form-control"
-                      placeholder="Search: {{ model_view.search_placeholder() }}"
+                      placeholder="Поиск: {{ model_view.search_placeholder() }}"
                       value="{{ request.query_params.get('search', '') }}">
-                    <button id="search-button" class="btn" type="button">Search</button>
+                    <button id="search-button search-button-radius" class="btn" type="button">Поиск</button>
                     <button id="search-reset" class="btn" type="button" {% if not request.query_params.get('search')
                       %}disabled{% endif %}><i class="fa-solid fa-times"></i></button>
                   </div>
                 </div>
                 {% endif %}
               </div>
-            </div>
+            </div> -->
             <div class="table-responsive">
               <table class="table card-table table-vcenter text-nowrap">
                 <thead>
@@ -180,7 +182,7 @@
                     <a class="page-link" href="#">
                       {% endif %}
                       <i class="fa-solid fa-chevron-left"></i>
-                      prev
+                      пред
                     </a>
                 </li>
                 {% for page_control in pagination.page_controls %}
@@ -193,12 +195,12 @@
                     {% else %}
                     <a class="page-link" href="#">
                       {% endif %}
-                      next
+                      след
                       <i class="fa-solid fa-chevron-right"></i>
                     </a>
                 </li>
               </ul>
-              <div class="dropdown text-muted">
+              <!-- <div class="dropdown text-muted">
                 Show
                 <a href="#" class="btn btn-sm btn-light dropdown-toggle" data-toggle="dropdown" aria-haspopup="true"
                   aria-expanded="false">
@@ -211,12 +213,12 @@
                   </a>
                   {% endfor %}
                 </div>
-              </div>
+              </div> -->
             </div>
           </div>
         </div>
         {% if model_view.get_filters() %}
-        <div class="col-md-3" style="width: 300px; flex-shrink: 0;">
+        <div class="col-md-3" style="width: 150px; flex-shrink: 0;">
           <div id="filter-sidebar" class="card">
             <div class="card-header">
               <h3 class="card-title">Filters</h3>

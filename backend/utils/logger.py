@@ -1,6 +1,8 @@
 import logging
-import sys
+from logging.handlers import RotatingFileHandler
 from pathlib import Path
+from typing import cast
+
 from decouple import config
 
 
@@ -9,26 +11,18 @@ def setup_logger():
 
     log_dir = Path("logs")
     log_dir.mkdir(exist_ok=True)
-    log_level = config("LOG_LEVEL", default="INFO").upper()
-
-    logger = logging.getLogger("ihearyou")
-    logger.setLevel(getattr(logging, log_level))
-
-    logger.handlers.clear()
-
-    formatter = logging.Formatter(
-        fmt="%(asctime)s | %(levelname)s | %(message)s", datefmt="%Y-%m-%d %H:%M:%S"
+    log_level = cast(str, config("LOG_LEVEL", default="INFO")).upper()
+    logging.basicConfig(
+        level=log_level,
+        format="%(asctime)s | %(levelname)-7s | %(name)-24s | %(message)s ",
+        datefmt="%Y-%m-%d %H:%M:%S",
+        handlers=(
+            logging.StreamHandler(),
+            RotatingFileHandler(
+                log_dir / "bot.log",
+                maxBytes=2_000_000,
+                backupCount=5,
+                encoding="utf-8",
+            ),
+        ),
     )
-
-    console_handler = logging.StreamHandler(sys.stdout)
-    console_handler.setFormatter(formatter)
-    logger.addHandler(console_handler)
-
-    file_handler = logging.FileHandler("logs/bot.log", encoding="utf-8")
-    file_handler.setFormatter(formatter)
-    logger.addHandler(file_handler)
-
-    return logger
-
-
-logger = setup_logger()

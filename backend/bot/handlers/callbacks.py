@@ -1,15 +1,35 @@
 from datetime import datetime
-from aiogram import Router, F
+from logging import getLogger
+from typing import cast
+
+from aiogram import F, Router
+from aiogram.filters import (
+    IS_MEMBER,
+    IS_NOT_MEMBER,
+    ChatMemberUpdatedFilter,
+)
+
 from aiogram.fsm.context import FSMContext
 from aiogram.types import (
     CallbackQuery,
+    ChatMemberUpdated,
     InlineKeyboardButton,
-    Message
+    Message,
 )
+from aiogram.types import User as TG_User
 from aiogram.utils.keyboard import InlineKeyboardBuilder
-
+from decouple import config
 from sqlalchemy import select
-from ..config import ADMIN_QUESTION_URL, ADMINS
+
+from data.db import get_session
+from data.models import Question
+from data.queries import (
+    get_button_by_id,
+    get_category_by_id,
+    get_or_create_user,
+    set_user_active,
+    set_user_inactive,
+)
 from ..keyboards.callbacks import (
     AdminCallback,
     ButtonCallback,
@@ -24,14 +44,19 @@ from ..keyboards.main_menu import (
     get_category_buttons_keyboard,
     get_feedback_keyboard,
     get_main_menu_keyboard,
-    get_rating_keyboard
+    get_rating_keyboard,
+    get_reminder_type_keyboard,
+    get_admin_inline_keyboard
 )
-from data.models import Question, User
-from data.queries import get_category_by_id, get_button_by_id
-from data.db import get_session
-from utils.logger import logger
+from ..services.reminder_service import ReminderService
 
 callback_router = Router()
+logger = getLogger(__name__)
+ADMINS = cast(
+    list[str], config(
+        "ADMINS", cast=lambda v: [s.strip() for s in v.split(",")]
+        )
+)
 
 
 @callback_router.callback_query(F.data.startswith("category:"))
@@ -278,28 +303,12 @@ async def process_question(message: Message, state: FSMContext):
                 "Команды не принимаются.")
             return
 
+        tg_user: TG_User = getattr(message, "from_user")
         async with get_session() as session:
-            user = await session.get(User, message.from_user.id)
-            if not user:
-                user = User(
-                    telegram_id=message.from_user.id,
-                    username=message.from_user.username,
-                    is_active=True,
-                    is_admin=False
-                )
-                session.add(user)
-                logger.info(f"New user created: {user}")
-            elif user.username != message.from_user.username:
-                user.username = message.from_user.username
-                session.add(user)
-                logger.info(
-                    f"User {user.telegram_id} "
-                    f"updated username to {user.username}"
-                )
-            new_question = Question(
-                text=message.text,
-                user_id=user.telegram_id
+            user = await get_or_create_user(
+                telegram_id=tg_user.id, username=tg_user.username, session=session
             )
+            new_question = Question(text=message.text, user_id=user.telegram_id)
             session.add(new_question)
             await session.commit()
             await session.refresh(new_question)
@@ -350,6 +359,106 @@ async def process_question(message: Message, state: FSMContext):
             "Пожалуйста, попробуйте еще раз позже."
         )
         await state.clear()
+
+
+@callback_router.message(F.text == "🔗 Админ панель")
+async def admin_panel_menu(message: Message):
+    """Обрабатывает кнопку 'Админ панель' для админов."""
+
+    keyboard = await get_admin_inline_keyboard()
+    await message.answer(
+        "Перейти в админ-панель:",
+        reply_markup=keyboard
+    )
+    await message.delete()
+
+
+@callback_router.message(F.text == "📢 Напоминания")
+async def send_reminders_menu(message: Message):
+    """Обрабатывает кнопку 'Напоминания' для админов."""
+
+    keyboard = await get_reminder_type_keyboard()
+    await message.answer(
+        "📢 Выберите тип напоминания для отправки пользователям, "
+        "которые не пользовались ботом неделю:",
+        reply_markup=keyboard
+    )
+    await message.delete()
+
+
+@callback_router.callback_query(
+    AdminCallback.filter(F.action == "send_reminder")
+)
+async def send_reminder_callback(
+    callback: CallbackQuery, callback_data: AdminCallback
+):
+    """Обрабатывает отправку напоминаний."""
+
+    reminder_type = callback_data.reminder_type
+
+    # Тексты напоминаний
+    reminders = {
+        "bot": (
+            "Привет! Напоминаем, что бот «Я Тебя Слышу» всегда рядом.\n"
+            "Здесь ты можешь найти статьи, советы и поддержку. "
+            "Загляни, когда будет время 🌿\n\n"
+            "Как узнать, что снижен слух: "
+            "https://www.ihearyou.ru/materials/articles/kak-uznat-chto-snizhen-slukh\n"
+            "Влияние потери слуха на семью: "
+            "https://www.ihearyou.ru/materials/articles/vliyanie-poteri-slukha-na-semyu"
+        ),
+        "auri": (
+            "👋 Привет, это снова я — Аури!\n"
+            "Ты давно не заглядывал в бот, и я немного скучал 💙\n"
+            "У меня тут есть новые материалы и советы, которые могут быть "
+            "полезны именно тебе. Загляни, когда будет настроение — "
+            "я всегда рядом 🌟"
+        )
+    }
+
+    reminder_text = reminders.get(reminder_type, "Неизвестный тип напоминания")
+
+    # Показываем сообщение о начале отправки
+    await callback.message.edit_text(
+        "Отправляем напоминания неактивным пользователям..."
+    )
+
+    try:
+        # Отправляем напоминания неактивным пользователям
+        results = await ReminderService.send_reminders_to_inactive_users(
+            bot=callback.bot,
+            reminder_text=reminder_text,
+            days=7
+        )
+
+        # Формируем сообщение с результатами
+        result_message = (
+            f"Напоминания отправлены!\n\n"
+            f"Статистика:\n"
+            f"• Всего неактивных пользователей: {results['total']}\n"
+            f"• Успешно отправлено: {results['sent']}\n"
+            f"• Ошибок: {results['failed']}"
+        )
+
+        if results['errors']:
+            result_message += "\n\nОшибки:\n" + "\n".join(results['errors'][:5])
+            if len(results['errors']) > 5:
+                result_message += (
+                    f"\n... и еще {len(results['errors']) - 5} ошибок"
+                )
+        await callback.message.edit_text(result_message)
+
+    except Exception as e:
+        logger.error(f"Ошибка при отправке напоминаний: {e}")
+        await callback.message.edit_text(
+            "Ошибка при отправке напоминаний"
+        )
+
+
+@callback_router.callback_query(AdminCallback.filter(F.action == "cancel"))
+async def cancel_admin_action(callback: CallbackQuery):
+    """Отменяет действие админа."""
+    await callback.message.delete()
 
 
 @callback_router.message(F.text == "🤝 Помощь")
@@ -409,11 +518,6 @@ async def handle_feedback_callback(
                     text,
                     reply_markup=builder.as_markup()
                 )
-
-            # await callback.answer(
-            #     "Спасибо за обратную связь!",
-            #     show_alert=False
-            # )
 
     except Exception as e:
         logger.exception(
@@ -536,3 +640,17 @@ async def process_answer(message: Message, state: FSMContext):
             "⚠️ Не удалось отправить ответ пользователю "
             f"{user_id_to_notify}. Ошибка: {e}")
     await state.clear()
+
+
+@callback_router.my_chat_member(ChatMemberUpdatedFilter(IS_MEMBER >> IS_NOT_MEMBER))
+async def on_user_leave(event: ChatMemberUpdated):
+    """Отмечает пользователя как неактивного при выходе из чата."""
+    async with get_session() as session:
+        await set_user_inactive(event.from_user.id, session)
+
+
+@callback_router.my_chat_member(ChatMemberUpdatedFilter(IS_NOT_MEMBER >> IS_MEMBER))
+async def on_user_join(event: ChatMemberUpdated):
+    """Отмечает пользователя как активного при входе в чат."""
+    async with get_session() as session:
+        await set_user_active(event.from_user.id, session)

@@ -1,9 +1,12 @@
-from starlette.requests import Request
-from sqlalchemy.orm import selectinload
+import logging
 
-from data.models import Question
+from sqlalchemy.orm import selectinload
+from starlette.requests import Request
+
 from admin.base import CustomModelView
-from utils.logger import logger
+from data.models import Question
+
+logger = logging.getLogger(__name__)
 
 
 class QuestionView(CustomModelView, model=Question):
@@ -36,7 +39,7 @@ class QuestionView(CustomModelView, model=Question):
     column_details_list = [
         Question.id,
         Question.text,
-        Question.answer,
+        Question.answer_text,
         Question.created_at,
         Question.user,
     ]
@@ -50,14 +53,16 @@ class QuestionView(CustomModelView, model=Question):
         return super().list_query(request).options(selectinload(Question.user))
 
     def details_query(self, request: Request):
-        return super().details_query(request).options(selectinload(Question.user))
+        return super().details_query(request).options(
+            selectinload(Question.user)
+        )
 
     @staticmethod
-    def format_user(model, attribute):
-        return model.user.username if model.user else "Неизвестно"
+    def format_user(model: Question, attribute) -> str:
+        return model.user.telegram_id if model.user else "Неизвестно"
 
     @staticmethod
-    def format_datetime(model, attribute):
+    def format_datetime(model: Question, attribute) -> str:
         return model.created_at.strftime("%d.%m.%Y %H:%M")
 
     column_formatters = {
