@@ -299,7 +299,7 @@ body {
   transition: all var(--transition-normal);
   box-shadow: var(--shadow-sm);
   font-size: 15px;
-  margin-right: 10px;
+  margin-right: 0px !important;
 }
 
 .form-control:focus {
@@ -308,6 +308,7 @@ body {
   color: var(--text-primary) !important;
   box-shadow: 0 0 0 4px rgba(147, 51, 234, 0.1), var(--shadow-md) !important;
   transform: translateY(-1px);
+  outline: none !important;
 }
 
 .form-control:hover {
