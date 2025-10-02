@@ -16,13 +16,14 @@ class QuestionView(CustomModelView, model=Question):
 
     # Разрешённые действия с моделью
     can_create = False
-    can_edit = True
+    can_edit = False
     can_delete = False
 
     # Название полей
     column_labels = {
         Question.id: "ID",
         Question.text: "Вопрос",
+        Question.answer_text: "Ответ",
         Question.user: "Пользователь",
         Question.created_at: "Дата и время получения вопроса",
     }
@@ -44,11 +45,6 @@ class QuestionView(CustomModelView, model=Question):
         Question.user,
     ]
 
-    # Поля доступные для изменений
-    form_columns = [
-        "answer",
-    ]
-
     def list_query(self, request: Request):
         return super().list_query(request).options(selectinload(Question.user))
 
@@ -59,7 +55,7 @@ class QuestionView(CustomModelView, model=Question):
 
     @staticmethod
     def format_user(model: Question, attribute) -> str:
-        return model.user.telegram_id if model.user else "Неизвестно"
+        return model.user.username if model.user else "Неизвестно"
 
     @staticmethod
     def format_datetime(model: Question, attribute) -> str:

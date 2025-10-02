@@ -140,7 +140,7 @@ async def get_reminder_type_keyboard() -> InlineKeyboardMarkup:
         ).pack()
     )
     builder.button(
-        text="🦊От Аури",
+        text="🐼От Аури",
         callback_data=AdminCallback(
             action="send_reminder",
             question_id=None,
@@ -206,28 +206,28 @@ def get_feedback_keyboard(
     return builder.as_markup()
 
 
-def get_rating_keyboard() -> InlineKeyboardMarkup:
+def get_rating_keyboard(content_id: int) -> InlineKeyboardMarkup:
     """Клавиатура для оценки от 1 до 5."""
     builder = InlineKeyboardBuilder()
     builder.button(
         text="5 ⭐",
-        callback_data=RatingCallback(rating=5).pack()
+        callback_data=RatingCallback(rating=5, content_id=content_id).pack()
     )
     builder.button(
         text="4 ⭐",
-        callback_data=RatingCallback(rating=5).pack()
+        callback_data=RatingCallback(rating=4, content_id=content_id).pack()
     )
     builder.button(
         text="3 ⭐",
-        callback_data=RatingCallback(rating=5).pack()
+        callback_data=RatingCallback(rating=3, content_id=content_id).pack()
     )
     builder.button(
         text="2 ⭐",
-        callback_data=RatingCallback(rating=5).pack()
+        callback_data=RatingCallback(rating=2, content_id=content_id).pack()
     )
     builder.button(
         text="1 ⭐",
-        callback_data=RatingCallback(rating=5).pack()
+        callback_data=RatingCallback(rating=1, content_id=content_id).pack()
     )
     builder.adjust(5)
     return builder.as_markup()

@@ -20,7 +20,7 @@ from aiogram.utils.keyboard import InlineKeyboardBuilder
 from sqlalchemy import select
 
 from data.db import get_session
-from data.models import Question
+from data.models import Question, Rating
 from data.queries import (
     get_button_by_id,
     get_category_by_id,
@@ -34,7 +34,6 @@ from ..keyboards.callbacks import (
     ButtonCallback,
     CategoryCallback,
     FeedbackCallback,
-    MainMenuCallback,
     RatingCallback,
     UserStates
 )
@@ -98,68 +97,6 @@ async def handle_category_callback(callback: CallbackQuery, state: FSMContext):
     except Exception as e:
         logger.exception(
             f"Category callback error: {e} " f"(user: {callback.from_user.id})"
-        )
-        await callback.answer("❌ Ошибка обработки запроса", show_alert=True)
-
-
-@callback_router.callback_query(F.data.startswith("main_menu:"))
-async def handle_main_menu_callback(
-    callback: CallbackQuery,
-    state: FSMContext
-):
-    """Обработка callback для главного меню"""
-    try:
-        callback_data = MainMenuCallback.unpack(callback.data)
-
-        if callback_data.category_id == 0:
-            logger.info(f"Return to main menu: {callback.from_user.id}")
-            await state.set_state(UserStates.MAIN_MENU)
-
-            async with get_session() as session:
-                keyboard = await get_main_menu_keyboard(session)
-                await callback.message.edit_text(
-                    "🏠 Главное меню\n\n"
-                    "Выберите интересующую вас категорию:",
-                    reply_markup=keyboard,
-                )
-
-        else:
-            await state.set_state(UserStates.CATEGORY_VIEW)
-
-            async with get_session() as session:
-                category = await get_category_by_id(
-                    callback_data.category_id,
-                    session
-                )
-
-                if not category:
-                    logger.warning(
-                        f"Category not found in main menu: "
-                        f"{callback_data.category_id}"
-                    )
-                    await callback.answer(
-                        "❌ Категория не найдена",
-                        show_alert=True
-                    )
-                    return
-
-                keyboard = await get_category_buttons_keyboard(
-                    callback_data.category_id, session
-                )
-
-                await callback.message.edit_text(
-                    f"📂 {category.title}\n\n"
-                    f"{(category.description or
-                        'Выберите интересующий вас раздел:')}",
-                    reply_markup=keyboard,
-                )
-
-        await callback.answer()
-
-    except Exception as e:
-        logger.exception(
-            f"Main menu callback error: {e} "
-            f"(user: {callback.from_user.id})"
         )
         await callback.answer("❌ Ошибка обработки запроса", show_alert=True)
 
@@ -475,24 +412,50 @@ async def handle_feedback_callback(
         user_id = callback.from_user.id
         content_id = callback_data.content_id
         action = callback_data.action
-        await state.set_state(UserStates.REVIEW)
+
+        # Сохраняем обратную связь в БД
+        async with get_session() as session:
+            user = await get_or_create_user(callback.from_user, session)
+
+            # Проверяем, есть ли уже рейтинг от этого пользователя
+            existing_rating = await session.execute(
+                select(Rating).where(
+                    Rating.user_id == user.telegram_id,
+                    Rating.content_id == content_id
+                )
+            )
+            rating_obj = existing_rating.scalar_one_or_none()
+
+            if rating_obj:
+                # Обновляем существующий рейтинг
+                rating_obj.is_helpful = (action == "helpful")
+            else:
+                # Создаем новый рейтинг
+                rating_obj = Rating(
+                    user_id=user.telegram_id,
+                    content_id=content_id,
+                    is_helpful=(action == "helpful")
+                )
+                session.add(rating_obj)
+
+            await session.commit()
+
+            logger.info(f"Feedback saved: user {user_id}, content {content_id}, helpful={action == 'helpful'}")
 
         if action == "helpful":
-            logger.info(f"User {user_id} found content {content_id} helpful.")
+            await state.set_state(UserStates.REVIEW)
+            # Сохраняем content_id в состоянии для последующего использования
+            await state.update_data(content_id=content_id)
+
             text = (
                 "Мы рады, что смогли вам помочь! 😊\n\n"
-                "Пожалуйста, оцените материал "
-                "с помощью клавиатуры под сообщением."
+                "Пожалуйста, оцените материал."
             )
-            keyboard = get_rating_keyboard()
+            keyboard = get_rating_keyboard(content_id)
             await callback.message.edit_text(text, reply_markup=keyboard)
             await callback.answer()
 
         elif action == "unhelpful":
-            logger.info(
-                f"User {user_id} found content "
-                f"{content_id} unhelpful."
-            )
             text = (
                 "Спасибо за обратную связь! "
                 "Мы постараемся улучшить материал. 🙏"
@@ -512,6 +475,7 @@ async def handle_feedback_callback(
                     text,
                     reply_markup=builder.as_markup()
                 )
+            await callback.answer()
 
     except Exception as e:
         logger.exception(
@@ -519,15 +483,15 @@ async def handle_feedback_callback(
             f"(user: {callback.from_user.id})"
         )
         await callback.answer(
-            "❌ Ошибка обработки запроса",
+            "❌ Ошибка обработки обратной связи",
             show_alert=True
         )
 
 
 @callback_router.callback_query(
-        UserStates.REVIEW,
-        RatingCallback.filter()
-    )
+    UserStates.REVIEW,
+    RatingCallback.filter()
+)
 async def handle_rating_callback(
     callback: CallbackQuery,
     callback_data: RatingCallback,
@@ -539,11 +503,37 @@ async def handle_rating_callback(
         content_id = callback_data.content_id
         rating = callback_data.rating
 
-        logger.info(
-            f"User {user_id} rated content {content_id} with {rating}."
-        )
+        # Сохраняем оценку в БД
+        async with get_session() as session:
+            user = await get_or_create_user(callback.from_user, session)
+
+            # Обновляем существующий рейтинг или создаем новый
+            existing_rating = await session.execute(
+                select(Rating).where(
+                    Rating.user_id == user.telegram_id,
+                    Rating.content_id == content_id
+                )
+            )
+            rating_obj = existing_rating.scalar_one_or_none()
+
+            if rating_obj:
+                # Обновляем существующий рейтинг
+                rating_obj.score = rating
+            else:
+                # Создаем новый рейтинг
+                rating_obj = Rating(
+                    user_id=user.telegram_id,
+                    content_id=content_id,
+                    score=rating
+                )
+                session.add(rating_obj)
+
+            await session.commit()
+
+            logger.info(f"Rating saved: user {user_id}, content {content_id}, score={rating}")
+
         await callback.message.edit_text(
-            text="Спасибо за обратную связь!",
+            text="Спасибо за оценку! ⭐",
             reply_markup=None
         )
         await callback.answer()
@@ -558,7 +548,6 @@ async def handle_rating_callback(
             "❌ Ошибка обработки оценки",
             show_alert=True
         )
-
 
 @callback_router.callback_query(
         AdminCallback.filter(F.action == "answer_question")
@@ -610,7 +599,7 @@ async def process_answer(message: Message, state: FSMContext):
             )
             await state.clear()
             return
-        question.answer = message.text
+        question.answer_text = message.text
         user_id_to_notify = question.user_id
         await session.commit()
     user_message = (
