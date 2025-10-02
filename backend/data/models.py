@@ -1,13 +1,14 @@
-from typing import Optional
 from datetime import datetime, timedelta
+from typing import Optional
 
-from sqlmodel import SQLModel, Field, Relationship
-from sqlalchemy import Column, Integer, BigInteger, DateTime, Text, String
 from aiogram.enums import UpdateType
+from sqlalchemy import BigInteger, Column, DateTime, Integer, String, Text
+from sqlmodel import Field, Relationship, SQLModel
 
-from .mixins import BaseInfoMixin, BaseCreatedAtFieldMixin, BaseIDMixin
+from enums.fields import InitValue, Length, ViewLimits
 from enums.msg import AnswerChoices
-from enums.fields import InitValue, ViewLimits, Length
+
+from .mixins import BaseCreatedAtFieldMixin, BaseIDMixin, BaseInfoMixin
 
 
 class Category(

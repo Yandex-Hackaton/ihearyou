@@ -1,20 +1,24 @@
+import logging
 from contextlib import asynccontextmanager
+
 from fastapi import FastAPI
 from fastapi.staticfiles import StaticFiles
 from sqladmin import Admin
 from starlette.middleware.sessions import SessionMiddleware
 
-from .config import AdminConfig
-from .auth import AdminAuthBackend
 from admin.view import (
     CategoryView,
     ContentView,
+    InteractionEventView,
     QuestionView,
     UserView,
-    InteractionEventView,
 )
-from data.db import engine, create_db_and_tables, load_fixtures
-from utils.logger import logger
+from data.db import create_db_and_tables, engine, load_fixtures
+
+from .auth import AdminAuthBackend
+from .config import AdminConfig
+
+logger = logging.getLogger(__name__)
 
 
 @asynccontextmanager

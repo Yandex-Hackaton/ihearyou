@@ -1,33 +1,31 @@
-import os
-from aiogram import Router, F
+from logging import getLogger
+
+from aiogram import F, Router
 from aiogram.fsm.context import FSMContext
-from aiogram.types import (
-    CallbackQuery,
-    InlineKeyboardButton,
-    Message
-)
+from aiogram.types import CallbackQuery, InlineKeyboardButton, Message
 from aiogram.utils.keyboard import InlineKeyboardBuilder
+from decouple import config
+
+from data.db import get_session
+from data.models import Question, User
+from data.queries import get_button_by_id, get_category_by_id
 
 from ..keyboards.callbacks import (
-    MainMenuCallback,
     ButtonCallback,
+    CategoryCallback,
     FeedbackCallback,
+    MainMenuCallback,
     UserStates,
-    CategoryCallback
 )
 from ..keyboards.main_menu import (
+    get_admin_answer_keyboard,
     get_category_buttons_keyboard,
     get_main_menu_keyboard,
-    get_admin_answer_keyboard
 )
-from data.models import Question, User
-from data.queries import get_category_by_id, get_button_by_id
-from data.db import get_session
-from utils.logger import logger
 
 callback_router = Router()
-
-ADMINS = [int(admin_id) for admin_id in os.getenv("ADMINS", "").split(',')]
+logger = getLogger(__name__)
+ADMINS = config("ADMINS", cast=lambda v: [s.strip() for s in v.split(",")])
 
 
 @callback_router.callback_query(F.data.startswith("category:"))

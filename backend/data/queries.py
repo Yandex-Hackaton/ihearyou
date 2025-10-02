@@ -1,11 +1,14 @@
 """Запросы к базе данных."""
 
-from sqlalchemy.future import select
-from sqlalchemy.ext.asyncio import AsyncSession
+from logging import getLogger
 from typing import Optional
 
-from data.models import Category, Content
-from utils.logger import logger
+from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.future import select
+
+from data.models import Category, Content, User
+
+logger = getLogger(__name__)
 
 
 async def get_category_by_id(
