@@ -1,4 +1,8 @@
-from aiogram.types import InlineKeyboardMarkup, ReplyKeyboardMarkup
+from aiogram.types import (
+    InlineKeyboardButton,
+    InlineKeyboardMarkup,
+    ReplyKeyboardMarkup
+)
 from aiogram.utils.keyboard import InlineKeyboardBuilder, ReplyKeyboardBuilder
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlmodel import select
@@ -7,8 +11,9 @@ from data.models import Content, Category
 from .callbacks import (
     AdminCallback,
     ButtonCallback,
-    GoToMainMenuCallback,
     CategoryCallback,
+    FeedbackCallback,
+    GoToMainMenuCallback,
     RatingCallback
 )
 
@@ -18,11 +23,13 @@ async def add_back_to_main_menu_button(builder: InlineKeyboardBuilder) -> None:
     Добавляет в клавиатуру кнопку "Назад к главному меню".
     """
     builder.button(
-        text="🔙 Назад к главному меню", callback_data=GoToMainMenuCallback().pack()
+        text="🔙 Назад к главному меню",
+        callback_data=GoToMainMenuCallback().pack()
     )
 
 
-async def get_main_menu_keyboard(session: AsyncSession) -> InlineKeyboardMarkup:
+async def get_main_menu_keyboard(
+        session: AsyncSession) -> InlineKeyboardMarkup:
     """
     Создает главное меню с двумя основными категориями из БД.
     """
@@ -58,7 +65,8 @@ async def get_category_buttons_keyboard(
             )
 
         builder.button(
-            text="🔙 Назад к главному меню", callback_data=GoToMainMenuCallback().pack()
+            text="🔙 Назад к главному меню",
+            callback_data=GoToMainMenuCallback().pack()
         )
         builder.adjust(1)
 
@@ -70,6 +78,7 @@ async def get_category_buttons_keyboard(
         builder.adjust(1)
 
     return builder.as_markup()
+
 
 async def get_main_reply_keyboard() -> ReplyKeyboardMarkup:
     """
@@ -95,6 +104,38 @@ async def get_admin_answer_keyboard(question_id: int) -> InlineKeyboardMarkup:
                 question_id=question_id).pack()
     )
     builder.adjust(1)
+    return builder.as_markup()
+
+
+def get_feedback_keyboard(
+        content_id: int,
+        category_id: int
+        ) -> InlineKeyboardMarkup:
+    """
+    Создает и возвращает клавиатуру для обратной связи и навигации.
+    """
+    builder = InlineKeyboardBuilder()
+    builder.row(
+        InlineKeyboardButton(
+            text="Было полезно 👍",
+            callback_data=FeedbackCallback(
+                action="helpful",
+                content_id=content_id).pack()
+        ),
+        InlineKeyboardButton(
+            text="Не помогло 👎",
+            callback_data=FeedbackCallback(
+                action="unhelpful",
+                content_id=content_id).pack()
+        )
+    )
+    builder.row(
+        InlineKeyboardButton(
+            text="🔙 Назад",
+            callback_data=CategoryCallback(
+                category_id=category_id).pack()
+        )
+    )
     return builder.as_markup()
 
 

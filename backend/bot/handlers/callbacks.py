@@ -19,9 +19,10 @@ from ..keyboards.callbacks import (
     CategoryCallback
 )
 from ..keyboards.main_menu import (
-    get_category_buttons_keyboard,
-    get_main_menu_keyboard,
     get_admin_answer_keyboard,
+    get_category_buttons_keyboard,
+    get_feedback_keyboard,
+    get_main_menu_keyboard,
     get_rating_keyboard
 )
 from data.models import Question, User
@@ -211,30 +212,10 @@ async def handle_button_callback(callback: CallbackQuery, state: FSMContext):
                     "ℹ️ Информация по данному разделу "
                     "будет добавлена в ближайшее время."
                 )
-            builder = InlineKeyboardBuilder()
-            builder.row(
-                InlineKeyboardButton(
-                    text="Было полезно 👍",
-                    callback_data=FeedbackCallback(
-                        action="helpful",
-                        content_id=callback_data.button_id).pack()
-                ),
-                InlineKeyboardButton(
-                    text="Не помогло 👎",
-                    callback_data=FeedbackCallback(
-                        action="unhelpful",
-                        content_id=callback_data.button_id).pack()
-                )
+            keyboard = get_feedback_keyboard(
+                content_id=button.id,
+                category_id=button.category_id
             )
-            builder.row(
-                InlineKeyboardButton(
-                    text="🔙 Назад",
-                    callback_data=CategoryCallback(
-                        category_id=button.category_id).pack()
-                )
-            )
-            keyboard = builder.as_markup()
-
             await callback.message.edit_text(
                 text,
                 reply_markup=keyboard,
