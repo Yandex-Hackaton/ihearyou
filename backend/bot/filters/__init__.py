@@ -1,1 +1,3 @@
-"""Фильтры для обработчиков бота."""
+from .filters import Filters
+
+__all__ = ['Filters']
