@@ -1,9 +1,12 @@
-from starlette.requests import Request
-from sqlalchemy.orm import selectinload
+import logging
 
-from data.models import Question
+from sqlalchemy.orm import selectinload
+from starlette.requests import Request
+
 from admin.base import CustomModelView
-from utils.logger import logger
+from data.models import Question
+
+logger = logging.getLogger(__name__)
 
 
 class QuestionView(CustomModelView, model=Question):

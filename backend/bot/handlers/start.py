@@ -1,16 +1,16 @@
+import logging
+
 from aiogram import Router
-from aiogram.filters import CommandStart, Command
-from aiogram.types import Message
+from aiogram.filters import Command, CommandStart
 from aiogram.fsm.context import FSMContext
+from aiogram.types import Message
 
-from ..keyboards.main_menu import (
-    get_main_menu_keyboard,
-    get_main_reply_keyboard
-)
-from ..keyboards.callbacks import UserStates
 from data.db import get_session
-from utils.logger import logger
 
+from ..keyboards.callbacks import UserStates
+from ..keyboards.main_menu import get_main_menu_keyboard, get_main_reply_keyboard
+
+logger = logging.getLogger(__name__)
 start_router = Router()
 
 

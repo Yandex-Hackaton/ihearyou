@@ -1,11 +1,14 @@
-from fastapi import Request
-from sqlalchemy import select
-from sqladmin.authentication import AuthenticationBackend
+import logging
 
-from data.models import User
+from fastapi import Request
+from sqladmin.authentication import AuthenticationBackend
+from sqlalchemy import select
+
 from data.db import get_session
-from utils.logger import logger
+from data.models import User
 from enums.msg import AuthAdmin
+
+logger = logging.getLogger(__name__)
 
 
 class AdminAuthBackend(AuthenticationBackend):

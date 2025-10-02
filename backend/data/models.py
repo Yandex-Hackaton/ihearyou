@@ -1,13 +1,14 @@
-from typing import Optional
 from datetime import datetime, timedelta
+from typing import Optional
 
-from sqlmodel import SQLModel, Field, Relationship
-from sqlalchemy import Column, Integer, BigInteger, DateTime, Text, String
 from aiogram.enums import UpdateType
+from sqlalchemy import BigInteger, Column, DateTime, Integer, String, Text
+from sqlmodel import Field, Relationship, SQLModel
 
-from .mixins import BaseInfoMixin, BaseCreatedAtFieldMixin, BaseIDMixin
+from enums.fields import InitValue, Length, ViewLimits
 from enums.msg import AnswerChoices
-from enums.fields import InitValue, ViewLimits, Length
+
+from .mixins import BaseCreatedAtFieldMixin, BaseIDMixin, BaseInfoMixin
 
 
 class Category(
@@ -61,10 +62,11 @@ class User(SQLModel, table=True):
     )
     username: Optional[str] = Field(unique=True, index=True)
     password: Optional[str] = Field(
+        default=None,
         sa_column=String(Length.PASSWORD_FIELD.value),
     )
-    is_active: bool
-    is_admin: bool
+    is_active: bool = Field(default=True)
+    is_admin: bool = Field(default=False)
     registered_at: datetime = Field(
         default_factory=lambda: datetime.utcnow() + timedelta(hours=3),
         sa_type=DateTime(timezone=True),
@@ -104,14 +106,12 @@ class InteractionEvent(
     __tablename__ = 'interaction_events'
 
     event_type: UpdateType
-    user_id: Optional[int]
-    username: Optional[str]
+    user_id: int
     message_text: Optional[str]
     callback_data: Optional[str]
 
     def __str__(self) -> str:
-        username_or_id = self.username or self.user_id
-        return f'Event #{self.id}: {self.event_type} from {username_or_id}'
+        return f"Event #{self.id}: {self.event_type}"
 
 
 class Rating(
