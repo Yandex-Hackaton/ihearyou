@@ -14,7 +14,7 @@ def setup_logger():
     log_level = cast(str, config("LOG_LEVEL", default="INFO")).upper()
     logging.basicConfig(
         level=log_level,
-        format="%(asctime)s | %(levelname)-6s | %(name)-20s | %(message)s ",
+        format="%(asctime)s | %(levelname)-7s | %(name)-24s | %(message)s ",
         datefmt="%Y-%m-%d %H:%M:%S",
         handlers=(
             logging.StreamHandler(),

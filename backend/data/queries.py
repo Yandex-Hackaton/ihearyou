@@ -3,6 +3,7 @@
 from logging import getLogger
 from typing import Optional
 
+from aiogram.types import User as TG_User
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
 
@@ -44,3 +45,42 @@ async def get_content_for_button(button_title: str, session: AsyncSession) -> st
     content = result.scalar_one_or_none()
 
     return content if content else ("Извините, для этого пункта пока нет информации.")
+
+
+async def get_or_create_user(tg_user: TG_User, session: AsyncSession) -> User:
+    """Получить объект пользоватетя или создать новый.
+    Так же обновляет username, если он изменился.
+
+    Args:
+        tg_user: это объект User от aiogram, например `message.from_user`
+    """
+    user = await session.get(User, tg_user.id)
+    if user:
+        if user.username != tg_user.username:
+            logger.info(f"User {user.telegram_id} updated username to {user.username}")
+            user.username = tg_user.username
+        return user
+    else:
+        user = User(
+            telegram_id=tg_user.id,
+            username=tg_user.username,
+        )
+        session.add(user)
+        logger.info(f"New user created: {user.telegram_id=}, {user.username=}")
+        return user
+
+
+async def set_user_inactive(telegram_id: int, session: AsyncSession) -> None:
+    """Установить пользователя как неактивного."""
+    user = await session.get(User, telegram_id)
+    if user:
+        user.is_active = False
+        logger.info(f"User {telegram_id} set to inactive")
+
+
+async def set_user_active(telegram_id: int, session: AsyncSession) -> None:
+    """Установить пользователя как активного."""
+    user = await session.get(User, telegram_id)
+    if user:
+        user.is_active = True
+        logger.info(f"User {telegram_id} set to active")

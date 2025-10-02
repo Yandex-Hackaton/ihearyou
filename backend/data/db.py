@@ -1,28 +1,25 @@
 import json
+from collections.abc import AsyncGenerator
 from contextlib import asynccontextmanager
 from pathlib import Path
+from typing import cast
 
-from sqlmodel import SQLModel, select
-from sqlalchemy.ext.asyncio import create_async_engine, AsyncSession
-from sqlalchemy.orm import sessionmaker
 from decouple import config
+from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_async_engine
+from sqlmodel import SQLModel, select
 
 from .models import User
 
 # Конфигурация базы данных
-postgres_url = config("POSTGRES_CONN_STRING")
+postgres_url = cast(str, config("POSTGRES_CONN_STRING"))
 
 # Создание движка и сессии
 engine = create_async_engine(postgres_url, echo=False)
-async_session = sessionmaker(
-    engine,
-    class_=AsyncSession,
-    expire_on_commit=False,
-)
+async_session = async_sessionmaker(engine, expire_on_commit=False)
 
 
 @asynccontextmanager
-async def get_session():
+async def get_session() -> AsyncGenerator[AsyncSession, None]:
     """Контекстный менеджер для работы с сессией базы данных."""
     session = async_session()
     try:

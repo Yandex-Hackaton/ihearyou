@@ -1,14 +1,32 @@
 from logging import getLogger
+from typing import cast
 
 from aiogram import F, Router
+from aiogram.filters import (
+    IS_MEMBER,
+    IS_NOT_MEMBER,
+    ChatMemberUpdatedFilter,
+)
 from aiogram.fsm.context import FSMContext
-from aiogram.types import CallbackQuery, InlineKeyboardButton, Message
+from aiogram.types import (
+    CallbackQuery,
+    ChatMemberUpdated,
+    InlineKeyboardButton,
+    Message,
+)
+from aiogram.types import User as TG_User
 from aiogram.utils.keyboard import InlineKeyboardBuilder
 from decouple import config
 
 from data.db import get_session
-from data.models import Question, User
-from data.queries import get_button_by_id, get_category_by_id
+from data.models import Question
+from data.queries import (
+    get_button_by_id,
+    get_category_by_id,
+    get_or_create_user,
+    set_user_active,
+    set_user_inactive,
+)
 
 from ..keyboards.callbacks import (
     ButtonCallback,
@@ -25,7 +43,9 @@ from ..keyboards.main_menu import (
 
 callback_router = Router()
 logger = getLogger(__name__)
-ADMINS = config("ADMINS", cast=lambda v: [s.strip() for s in v.split(",")])
+ADMINS = cast(
+    list[str], config("ADMINS", cast=lambda v: [s.strip() for s in v.split(",")])
+)
 
 
 @callback_router.callback_query(F.data.startswith("category:"))
@@ -262,28 +282,12 @@ async def process_question(message: Message, state: FSMContext):
                 "Команды не принимаются.")
             return
 
+        tg_user: TG_User = getattr(message, "from_user")
         async with get_session() as session:
-            user = await session.get(User, message.from_user.id)
-            if not user:
-                user = User(
-                    telegram_id=message.from_user.id,
-                    username=message.from_user.username,
-                    is_active=True,
-                    is_admin=False
-                )
-                session.add(user)
-                logger.info(f"New user created: {user}")
-            elif user.username != message.from_user.username:
-                user.username = message.from_user.username
-                session.add(user)
-                logger.info(
-                    f"User {user.telegram_id} "
-                    f"updated username to {user.username}"
-                )
-            new_question = Question(
-                text=message.text,
-                user_id=user.telegram_id
+            user = await get_or_create_user(
+                telegram_id=tg_user.id, username=tg_user.username, session=session
             )
+            new_question = Question(text=message.text, user_id=user.telegram_id)
             session.add(new_question)
             await session.commit()
             await session.refresh(new_question)
@@ -341,3 +345,17 @@ async def help_request(message: Message):
         "Мы направили в поддержку обращение, "
         "скоро с вами свяжется администратор."
     )
+
+
+@callback_router.my_chat_member(ChatMemberUpdatedFilter(IS_MEMBER >> IS_NOT_MEMBER))
+async def on_user_leave(event: ChatMemberUpdated):
+    """Отмечает пользователя как неактивного при выходе из чата."""
+    async with get_session() as session:
+        await set_user_inactive(event.from_user.id, session)
+
+
+@callback_router.my_chat_member(ChatMemberUpdatedFilter(IS_NOT_MEMBER >> IS_MEMBER))
+async def on_user_join(event: ChatMemberUpdated):
+    """Отмечает пользователя как активного при входе в чат."""
+    async with get_session() as session:
+        await set_user_active(event.from_user.id, session)

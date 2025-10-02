@@ -62,10 +62,11 @@ class User(SQLModel, table=True):
     )
     username: Optional[str] = Field(unique=True, index=True)
     password: Optional[str] = Field(
+        default=None,
         sa_column=String(Length.PASSWORD_FIELD.value),
     )
-    is_active: bool
-    is_admin: bool
+    is_active: bool = Field(default=True)
+    is_admin: bool = Field(default=False)
     registered_at: datetime = Field(
         default_factory=lambda: datetime.utcnow() + timedelta(hours=3),
         sa_type=DateTime(timezone=True),
