@@ -54,9 +54,11 @@ class InteractionEventService:
              {'month': datetime.datetime(2025, 9, 1, 0, 0), 'count': 41}]
              ```
         """
-        # date_trunc это функция PostgreSQL округляет дату вниз до начала месяца
+        # date_trunc - функция PostgreSQL округляет дату вниз до начала месяца
         # 2025-09-17 12:34 → 2025-09-01 00:00
-        truncated = func.date_trunc("month", InteractionEvent.created_at).label("month")
+        truncated = func.date_trunc(
+            "month", InteractionEvent.created_at
+        ).label("month")
         query = (
             select(truncated, func.count(InteractionEvent.id).label("count"))
             .where(extract("year", InteractionEvent.created_at) == year)
@@ -79,11 +81,15 @@ class InteractionEventService:
             {'day': datetime.datetime(2025, 9, 27, 0, 0), 'count': 30}]
             ```
         """
-        truncated = func.date_trunc("day", InteractionEvent.created_at).label("day")
+        truncated = func.date_trunc(
+            "day", InteractionEvent.created_at
+        ).label("day")
         query = (
             select(truncated, func.count(InteractionEvent.id).label("count"))
             .where(
-                InteractionEvent.created_at >= func.now() - text("interval '7 days'")
+                InteractionEvent.created_at >= func.now() - text(
+                    "interval '7 days'",
+                )
             )
             .group_by(truncated)
             .order_by(truncated)
@@ -97,13 +103,13 @@ class InteractionEventService:
         """Количество пользователей, которые не пошли дальше /start."""
         subquery = (
             select(InteractionEvent.user_id)
-            .group_by(InteractionEvent.user_id)  # type: ignore[attr-defined]
+            .group_by(InteractionEvent.user_id)
             .having(func.count(InteractionEvent.id) == 1)
         ).subquery()
         query = (
             select(func.count(distinct(InteractionEvent.user_id)))
             .where(InteractionEvent.message_text == "/start")
-            .where(InteractionEvent.user_id.in_(subquery))  # type: ignore[attr-defined]
+            .where(InteractionEvent.user_id.in_(subquery))
         )
         result = await self.db.execute(query)
         count = result.scalar()
@@ -112,7 +118,8 @@ class InteractionEventService:
     async def get_most_popular_messages(self) -> list[dict[str, Any]]:
         """Топ-10 самых популярных сообщений пользователей.
 
-        Пример вывода: `[{"message": "/start", "count": 50}, {"message": "help", "count": 20}]`.
+        Пример вывода: `[{"message": "/start", "count": 50},
+        {"message": "help", "count": 20}]`.
         """
         query = (
             select(
@@ -120,19 +127,22 @@ class InteractionEventService:
                 func.count(InteractionEvent.id).label("count"),
             )
             .where(InteractionEvent.event_type == UpdateType.MESSAGE)
-            .where(InteractionEvent.message_text.isnot(None))  # type: ignore
+            .where(InteractionEvent.message_text.isnot(None))
             .group_by(InteractionEvent.message_text)
             .order_by(func.count(InteractionEvent.id).desc())
             .limit(10)
         )
         result = await self.db.execute(query)
         rows = result.all()
-        return [{"message": row.message_text, "count": row.count} for row in rows]
+        return [
+            {"message": row.message_text, "count": row.count} for row in rows
+        ]
 
     async def get_most_popular_callbacks(self) -> list[dict[str, Any]]:
         """Топ-10 самых популярных callback кнопок.
 
-        Пример вывода: [{"callback": "button1", "count": 30}, {"callback": "help", "count": 15}].
+        Пример вывода: [{"callback": "button1", "count": 30},
+        {"callback": "help", "count": 15}].
         """
         query = (
             select(
@@ -140,14 +150,16 @@ class InteractionEventService:
                 func.count(InteractionEvent.id).label("count"),
             )
             .where(InteractionEvent.event_type == UpdateType.CALLBACK_QUERY)
-            .where(InteractionEvent.callback_data.isnot(None))  # type: ignore
+            .where(InteractionEvent.callback_data.isnot(None))
             .group_by(InteractionEvent.callback_data)
             .order_by(func.count(InteractionEvent.id).desc())
             .limit(10)
         )
         result = await self.db.execute(query)
         rows = result.all()
-        return [{"callback": row.callback_data, "count": row.count} for row in rows]
+        return [
+            {"callback": row.callback_data, "count": row.count} for row in rows
+        ]
 
     async def get_callback_usage_count(self, callback_data: str) -> int:
         """Количество использований колбэка по имени."""
