@@ -8,7 +8,8 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlmodel import select
 
 from data.models import Content, Category
-from .callbacks import (
+from bot.urls import URLs
+from bot.keyboards.callbacks import (
     AdminCallback,
     ButtonCallback,
     CategoryCallback,
@@ -117,11 +118,11 @@ async def get_admin_inline_keyboard() -> InlineKeyboardMarkup:
     builder = InlineKeyboardBuilder()
     builder.button(
         text="❓ К вопросам",
-        url="https://stepaxvii.ru/admin/question/list"
+        url=URLs.ADMIN_QUESTION_LIST_URL
     )
     builder.button(
         text="📊 К статистике",
-        url="https://stepaxvii.ru/admin/interaction-event/list"
+        url=URLs.ADMIN_STATS_LIST_URL
     )
     builder.button(
         text="🔧 Управление контентом",

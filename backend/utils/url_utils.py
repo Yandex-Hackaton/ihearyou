@@ -1,6 +1,3 @@
-"""
-Утилиты для работы с URL изображений.
-"""
 import re
 import unicodedata
 

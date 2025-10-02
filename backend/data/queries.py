@@ -1,5 +1,3 @@
-"""Запросы к базе данных."""
-
 from logging import getLogger
 from typing import Optional
 
