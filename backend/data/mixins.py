@@ -8,8 +8,7 @@ from enums.fields import Length
 
 
 class BaseIDMixin(SQLModel):
-    id: Optional[int] = Field(default=None, primary_key=True)
-
+    id: int = Field(primary_key=True)
 
 class BaseInfoMixin(SQLModel):
     title: str = Field(
