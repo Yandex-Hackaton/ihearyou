@@ -40,6 +40,7 @@ class FeedbackCallback(CallbackData, prefix="feedback"):
 
 class RatingCallback(CallbackData, prefix="rating"):
     rating: int
+    content_id: int
 
 
 class UserStates(StatesGroup):

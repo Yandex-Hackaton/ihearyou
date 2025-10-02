@@ -1,3 +1,4 @@
+from datetime import datetime
 from logging import getLogger
 from typing import cast
 
@@ -7,6 +8,7 @@ from aiogram.filters import (
     IS_NOT_MEMBER,
     ChatMemberUpdatedFilter,
 )
+
 from aiogram.fsm.context import FSMContext
 from aiogram.types import (
     CallbackQuery,
@@ -17,6 +19,7 @@ from aiogram.types import (
 from aiogram.types import User as TG_User
 from aiogram.utils.keyboard import InlineKeyboardBuilder
 from decouple import config
+from sqlalchemy import select
 
 from data.db import get_session
 from data.models import Question
@@ -27,32 +30,32 @@ from data.queries import (
     set_user_active,
     set_user_inactive,
 )
-
 from ..keyboards.callbacks import (
+    AdminCallback,
     ButtonCallback,
     CategoryCallback,
     FeedbackCallback,
     MainMenuCallback,
-    UserStates,
-    AdminCallback
+    RatingCallback,
+    UserStates
 )
 from ..keyboards.main_menu import (
     get_admin_answer_keyboard,
     get_category_buttons_keyboard,
+    get_feedback_keyboard,
     get_main_menu_keyboard,
-    get_admin_answer_keyboard,
+    get_rating_keyboard,
     get_reminder_type_keyboard,
     get_admin_inline_keyboard
 )
 from ..services.reminder_service import ReminderService
-from data.models import Question, User
-from data.queries import get_category_by_id, get_button_by_id
-from data.db import get_session
 
 callback_router = Router()
 logger = getLogger(__name__)
 ADMINS = cast(
-    list[str], config("ADMINS", cast=lambda v: [s.strip() for s in v.split(",")])
+    list[str], config(
+        "ADMINS", cast=lambda v: [s.strip() for s in v.split(",")]
+        )
 )
 
 
@@ -69,11 +72,20 @@ async def handle_category_callback(callback: CallbackQuery, state: FSMContext):
         await state.set_state(UserStates.CATEGORY_VIEW)
 
         async with get_session() as session:
-            category = await get_category_by_id(callback_data.category_id, session)
+            category = await get_category_by_id(
+                callback_data.category_id,
+                session
+            )
 
             if not category:
-                logger.warning(f"Category not found: {callback_data.category_id}")
-                await callback.answer("❌ Категория не найдена", show_alert=True)
+                logger.warning(
+                    "Category not found: "
+                    f"{callback_data.category_id}"
+                )
+                await callback.answer(
+                    "❌ Категория не найдена",
+                    show_alert=True
+                )
                 return
 
             keyboard = await get_category_buttons_keyboard(
@@ -90,14 +102,17 @@ async def handle_category_callback(callback: CallbackQuery, state: FSMContext):
         await callback.answer()
 
     except Exception as e:
-        logger.error(
+        logger.exception(
             f"Category callback error: {e} " f"(user: {callback.from_user.id})"
         )
         await callback.answer("❌ Ошибка обработки запроса", show_alert=True)
 
 
 @callback_router.callback_query(F.data.startswith("main_menu:"))
-async def handle_main_menu_callback(callback: CallbackQuery, state: FSMContext):
+async def handle_main_menu_callback(
+    callback: CallbackQuery,
+    state: FSMContext
+):
     """Обработка callback для главного меню"""
     try:
         callback_data = MainMenuCallback.unpack(callback.data)
@@ -109,7 +124,8 @@ async def handle_main_menu_callback(callback: CallbackQuery, state: FSMContext):
             async with get_session() as session:
                 keyboard = await get_main_menu_keyboard(session)
                 await callback.message.edit_text(
-                    "🏠 Главное меню\n\n" "Выберите интересующую вас категорию:",
+                    "🏠 Главное меню\n\n"
+                    "Выберите интересующую вас категорию:",
                     reply_markup=keyboard,
                 )
 
@@ -117,14 +133,20 @@ async def handle_main_menu_callback(callback: CallbackQuery, state: FSMContext):
             await state.set_state(UserStates.CATEGORY_VIEW)
 
             async with get_session() as session:
-                category = await get_category_by_id(callback_data.category_id, session)
+                category = await get_category_by_id(
+                    callback_data.category_id,
+                    session
+                )
 
                 if not category:
                     logger.warning(
                         f"Category not found in main menu: "
                         f"{callback_data.category_id}"
                     )
-                    await callback.answer("❌ Категория не найдена", show_alert=True)
+                    await callback.answer(
+                        "❌ Категория не найдена",
+                        show_alert=True
+                    )
                     return
 
                 keyboard = await get_category_buttons_keyboard(
@@ -141,14 +163,18 @@ async def handle_main_menu_callback(callback: CallbackQuery, state: FSMContext):
         await callback.answer()
 
     except Exception as e:
-        logger.error(
-            f"Main menu callback error: {e} " f"(user: {callback.from_user.id})"
+        logger.exception(
+            f"Main menu callback error: {e} "
+            f"(user: {callback.from_user.id})"
         )
         await callback.answer("❌ Ошибка обработки запроса", show_alert=True)
 
 
 @callback_router.callback_query(F.data == "go_main")
-async def handle_go_to_main_menu_callback(callback: CallbackQuery, state: FSMContext):
+async def handle_go_to_main_menu_callback(
+    callback: CallbackQuery,
+    state: FSMContext
+):
     """Обработка callback для возврата в главное меню"""
     try:
         logger.info(f"Go to main menu: {callback.from_user.id}")
@@ -165,13 +191,16 @@ async def handle_go_to_main_menu_callback(callback: CallbackQuery, state: FSMCon
         await callback.answer()
 
     except Exception as e:
-        logger.error(f"Go to main menu error: {e} " f"(user: {callback.from_user.id})")
+        logger.exception(
+            f"Go to main menu error: {e} "
+            f"(user: {callback.from_user.id})"
+        )
         await callback.answer("❌ Ошибка обработки запроса", show_alert=True)
 
 
 @callback_router.callback_query(F.data.startswith("button:"))
 async def handle_button_callback(callback: CallbackQuery, state: FSMContext):
-    """Обработка callback для кнопок"""
+    """Обработка callback для кнопок контента."""
     try:
         callback_data = ButtonCallback.unpack(callback.data)
         logger.info(
@@ -188,7 +217,13 @@ async def handle_button_callback(callback: CallbackQuery, state: FSMContext):
                 logger.warning(f"Button not found: {callback_data.button_id}")
                 await callback.answer("❌ Кнопка не найдена", show_alert=True)
                 return
-
+            button.views_count += 1
+            session.add(button)
+            await session.commit()
+            logger.info(
+                f"Updated views for content_id {button.id} "
+                f"to {button.views_count}"
+            )
             text = f"📌 {button.title}\n\n"
 
             if button.description:
@@ -201,42 +236,20 @@ async def handle_button_callback(callback: CallbackQuery, state: FSMContext):
                     "ℹ️ Информация по данному разделу "
                     "будет добавлена в ближайшее время."
                 )
-            builder = InlineKeyboardBuilder()
-            builder.row(
-                InlineKeyboardButton(
-                    text="Было полезно 👍",
-                    callback_data=FeedbackCallback(
-                        action="helpful",
-                        content_id=callback_data.button_id).pack()
-                ),
-                InlineKeyboardButton(
-                    text="Не помогло 👎",
-                    callback_data=FeedbackCallback(
-                        action="unhelpful",
-                        content_id=callback_data.button_id).pack()
-                )
+            keyboard = get_feedback_keyboard(
+                content_id=button.id,
+                category_id=button.category_id
             )
-            builder.row(
-                InlineKeyboardButton(
-                    text="🔙 Назад",
-                    callback_data=CategoryCallback(
-                        category_id=button.category_id).pack()
-                )
-            )
-            keyboard = builder.as_markup()
-
             await callback.message.edit_text(
                 text,
                 reply_markup=keyboard,
                 disable_web_page_preview=True
             )
 
-            await callback.message.edit_text(text, reply_markup=keyboard)
-
         await callback.answer()
 
     except Exception as e:
-        logger.error(
+        logger.exception(
             f"Button callback error: {e} "
             f"(user: {callback.from_user.id})"
         )
@@ -303,6 +316,7 @@ async def process_question(message: Message, state: FSMContext):
             logger.info(
                 f"New question #{new_question.id} "
                 f"from user {message.from_user.id}"
+                f"<i>Ссылка: {ADMIN_QUESTION_URL}{new_question.id}</i>"
             )
 
             await message.answer(
@@ -316,6 +330,7 @@ async def process_question(message: Message, state: FSMContext):
                 f"<b>От пользователя:</b> @{user.username} "
                 f"(ID: {user.telegram_id})\n"
                 f"<b>Текст вопроса:</b>\n{message.text}"
+                f"<i>Ссылка: {ADMIN_QUESTION_URL}{new_question.id}</i>"
             )
             # Отправляем уведомление всем админам
             for admin_id in ADMINS:
@@ -323,19 +338,19 @@ async def process_question(message: Message, state: FSMContext):
                     await message.bot.send_message(
                         chat_id=admin_id,
                         text=admin_message,
-                        reply_markup=get_admin_answer_keyboard(
+                        reply_markup=await get_admin_answer_keyboard(
                             new_question.id
                         ),
                         parse_mode="HTML"
                     )
                 except Exception as e:
-                    logger.error(
+                    logger.exception(
                         "Failed to send question "
                         f"to admin {admin_id}: {e}"
                     )
 
     except Exception as e:
-        logger.error(
+        logger.exception(
             "Error processing question from user "
             f"{message.from_user.id}: {e}"
             )
@@ -453,6 +468,178 @@ async def help_request(message: Message):
         "Мы направили в поддержку обращение, "
         "скоро с вами свяжется администратор."
     )
+
+
+@callback_router.callback_query(FeedbackCallback.filter())
+async def handle_feedback_callback(
+    callback: CallbackQuery,
+    callback_data: FeedbackCallback,
+    state: FSMContext
+):
+    """Обработка обратной связи (полезно/не помогло)"""
+    try:
+        user_id = callback.from_user.id
+        content_id = callback_data.content_id
+        action = callback_data.action
+        await state.set_state(UserStates.REVIEW)
+
+        if action == "helpful":
+            logger.info(f"User {user_id} found content {content_id} helpful.")
+            text = (
+                "Мы рады, что смогли вам помочь! 😊\n\n"
+                "Пожалуйста, оцените материал "
+                "с помощью клавиатуры под сообщением."
+            )
+            keyboard = get_rating_keyboard()
+            await callback.message.edit_text(text, reply_markup=keyboard)
+            await callback.answer()
+
+        elif action == "unhelpful":
+            logger.info(
+                f"User {user_id} found content "
+                f"{content_id} unhelpful."
+            )
+            text = (
+                "Спасибо за обратную связь! "
+                "Мы постараемся улучшить материал. 🙏"
+            )
+            async with get_session() as session:
+                button = await get_button_by_id(content_id, session)
+                builder = InlineKeyboardBuilder()
+                if button:
+                    builder.row(
+                        InlineKeyboardButton(
+                            text="🔙 Назад",
+                            callback_data=CategoryCallback(
+                                category_id=button.category_id).pack()
+                        )
+                    )
+                await callback.message.edit_text(
+                    text,
+                    reply_markup=builder.as_markup()
+                )
+
+    except Exception as e:
+        logger.exception(
+            f"Feedback callback error: {e} "
+            f"(user: {callback.from_user.id})"
+        )
+        await callback.answer(
+            "❌ Ошибка обработки запроса",
+            show_alert=True
+        )
+
+
+@callback_router.callback_query(
+        UserStates.REVIEW,
+        RatingCallback.filter()
+    )
+async def handle_rating_callback(
+    callback: CallbackQuery,
+    callback_data: RatingCallback,
+    state: FSMContext
+):
+    """Обработка нажатия на кнопку с оценкой ⭐."""
+    try:
+        user_id = callback.from_user.id
+        content_id = callback_data.content_id
+        rating = callback_data.rating
+
+        logger.info(
+            f"User {user_id} rated content {content_id} with {rating}."
+        )
+        await callback.message.edit_text(
+            text="Спасибо за обратную связь!",
+            reply_markup=None
+        )
+        await callback.answer()
+        await state.clear()
+
+    except Exception as e:
+        logger.exception(
+            f"Rating callback error: {e} "
+            f"(user: {callback.from_user.id})"
+        )
+        await callback.answer(
+            "❌ Ошибка обработки оценки",
+            show_alert=True
+        )
+
+
+@callback_router.callback_query(
+        AdminCallback.filter(F.action == "answer_question")
+    )
+async def start_answer(
+    query: CallbackQuery,
+    callback_data: AdminCallback,
+    state: FSMContext
+):
+    """
+    Обрабатывает нажатие админом кнопки 'Ответить'.
+    Переводит админа в состояние ожидания ответа.
+    """
+    question_id = callback_data.question_id
+    await state.update_data(question_id=question_id)
+    await state.set_state(UserStates.ANSWER)
+    await query.message.answer(f"Введите ответ на вопрос #{question_id}:")
+    await query.answer()
+
+
+@callback_router.message(UserStates.ANSWER)
+async def process_answer(message: Message, state: FSMContext):
+    """
+    Принимает ответ от админа, сохраняет в БД и отправляет пользователю.
+    """
+    if not message.text:
+        await message.answer("Пожалуйста, введите ответ текстом.")
+        return
+    await state.set_state(UserStates.ANSWER)
+    data = await state.get_data()
+    question_id = data.get("question_id")
+
+    if not question_id:
+        await message.answer(
+            "Произошла ошибка, не удалось определить вопрос. "
+            "Попробуйте снова."
+        )
+        await state.clear()
+        return
+    user_id_to_notify = None
+
+    async with get_session() as session:
+        stmt = select(Question).where(Question.id == question_id)
+        result = await session.execute(stmt)
+        question = result.scalar_one_or_none()
+        if not question:
+            await message.answer(
+                f"Вопрос # {question_id} не найден в базе данных."
+            )
+            await state.clear()
+            return
+        question.answer = message.text
+        user_id_to_notify = question.user_id
+        await session.commit()
+    user_message = (
+        "<b>✅ Ответ на ваш вопрос от "
+        f"{datetime.now().strftime('%d.%m.%Y %H:%M')}</b>\n\n"
+        f"{message.text}"
+    )
+
+    try:
+        await message.bot.send_message(
+            chat_id=user_id_to_notify,
+            text=user_message,
+            parse_mode="HTML"
+        )
+        await message.answer(
+            f"✅ Ответ на вопрос #{question_id} "
+            "успешно отправлен пользователю."
+        )
+    except Exception as e:
+        await message.answer(
+            "⚠️ Не удалось отправить ответ пользователю "
+            f"{user_id_to_notify}. Ошибка: {e}")
+    await state.clear()
 
 
 @callback_router.my_chat_member(ChatMemberUpdatedFilter(IS_MEMBER >> IS_NOT_MEMBER))
