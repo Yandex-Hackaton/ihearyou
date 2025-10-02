@@ -1,0 +1,11 @@
+.env
+.envrc
+.venv
+.venv/
+env/
+venv/
+ENV/
+env.bak/
+venv.bak/
+.git
+db.sqlite3 

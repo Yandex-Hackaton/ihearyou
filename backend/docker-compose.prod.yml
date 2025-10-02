@@ -1,0 +1,50 @@
+services:
+  postgres:
+    image: postgres:15-alpine
+    container_name: ihearyou_postgres
+    env_file: .env
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - ihearyou_network
+    restart: always
+
+  admin:
+    build:
+      dockerfile: Dockerfile
+    container_name: ihearyou_admin
+    env_file: .env
+    ports:
+      - "127.0.0.1:9000:8000"
+    depends_on:
+      postgres:
+        condition: service_healthy
+    command: ["poetry", "run", "uvicorn", "admin.app:app", "--host", "0.0.0.0", "--port", "8000"]
+    networks:
+      - ihearyou_network
+    restart: always
+
+  bot:
+    build:
+      context: .
+    container_name: ihearyou_bot
+    env_file: .env
+    depends_on:
+      postgres:
+        condition: service_healthy
+    command: ["poetry", "run", "python", "-m", "bot.app"]
+    networks:
+      - ihearyou_network
+    restart: always
+
+volumes:
+  postgres_data:
+
+networks:
+  ihearyou_network:
+    driver: bridge
