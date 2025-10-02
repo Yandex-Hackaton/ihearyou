@@ -1,6 +1,5 @@
 from datetime import datetime
 from logging import getLogger
-from typing import cast
 
 from aiogram import F, Router
 from aiogram.filters import (
@@ -18,7 +17,6 @@ from aiogram.types import (
 )
 from aiogram.types import User as TG_User
 from aiogram.utils.keyboard import InlineKeyboardBuilder
-from decouple import config
 from sqlalchemy import select
 
 from data.db import get_session
@@ -30,6 +28,7 @@ from data.queries import (
     set_user_active,
     set_user_inactive,
 )
+from ..config import ADMINS, ADMIN_QUESTION_URL
 from ..keyboards.callbacks import (
     AdminCallback,
     ButtonCallback,
@@ -52,11 +51,6 @@ from ..services.reminder_service import ReminderService
 
 callback_router = Router()
 logger = getLogger(__name__)
-ADMINS = cast(
-    list[str], config(
-        "ADMINS", cast=lambda v: [s.strip() for s in v.split(",")]
-        )
-)
 
 
 @callback_router.callback_query(F.data.startswith("category:"))
@@ -306,7 +300,7 @@ async def process_question(message: Message, state: FSMContext):
         tg_user: TG_User = getattr(message, "from_user")
         async with get_session() as session:
             user = await get_or_create_user(
-                telegram_id=tg_user.id, username=tg_user.username, session=session
+                tg_user=tg_user, session=session
             )
             new_question = Question(text=message.text, user_id=user.telegram_id)
             session.add(new_question)

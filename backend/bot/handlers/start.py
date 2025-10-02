@@ -1,26 +1,18 @@
 import logging
-from typing import cast
 
 from aiogram import Router
 from aiogram.filters import Command, CommandStart
 from aiogram.fsm.context import FSMContext
 from aiogram.types import Message
-from decouple import config
 
 from ..keyboards.main_menu import (
     get_main_menu_keyboard,
     get_main_reply_keyboard,
     get_admin_reply_keyboard
 )
+from ..config import ADMINS
 from ..keyboards.callbacks import UserStates
 from data.db import get_session
-
-ADMINS = cast(
-    list[str], config("ADMINS", cast=lambda v: [s.strip() for s in v.split(",")])
-)
-
-from ..keyboards.callbacks import UserStates
-from ..keyboards.main_menu import get_main_menu_keyboard, get_main_reply_keyboard
 
 logger = logging.getLogger(__name__)
 start_router = Router()
