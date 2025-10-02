@@ -1,5 +1,8 @@
+import logging
+
 from sqladmin import ModelView
-from utils.logger import logger
+
+logger = logging.getLogger(__name__)
 
 
 class CustomModelView(ModelView):

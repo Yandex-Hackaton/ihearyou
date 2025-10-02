@@ -50,7 +50,7 @@ class UserView(CustomModelView, model=User):
     identity = "user"
 
     @staticmethod
-    def format_datetime(model, attribute):
+    def format_datetime(model: User, attribute) -> str:
         return model.registered_at.strftime("%d.%m.%Y %H:%M")
 
     column_formatters = {User.registered_at: format_datetime}

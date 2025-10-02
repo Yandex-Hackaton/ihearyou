@@ -1,10 +1,13 @@
 from datetime import datetime, timedelta
+from logging import getLogger
+
 from sqlmodel import select, func
 from aiogram import Bot
 
 from data.models import User, InteractionEvent
 from data.db import get_session
-from utils.logger import logger
+
+logger = getLogger(__name__)
 
 
 class ReminderService:

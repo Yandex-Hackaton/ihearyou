@@ -1,7 +1,10 @@
+import logging
+from typing import cast
+
 from aiogram import Router
-from aiogram.filters import CommandStart, Command
-from aiogram.types import Message
+from aiogram.filters import Command, CommandStart
 from aiogram.fsm.context import FSMContext
+from aiogram.types import Message
 from decouple import config
 
 from ..keyboards.main_menu import (
@@ -11,13 +14,15 @@ from ..keyboards.main_menu import (
 )
 from ..keyboards.callbacks import UserStates
 from data.db import get_session
-from utils.logger import logger
 
-ADMINS = [
-    int(admin_id) for admin_id in config('ADMINS', default='').split(',')
-    if admin_id
-]
+ADMINS = cast(
+    list[str], config("ADMINS", cast=lambda v: [s.strip() for s in v.split(",")])
+)
 
+from ..keyboards.callbacks import UserStates
+from ..keyboards.main_menu import get_main_menu_keyboard, get_main_reply_keyboard
+
+logger = logging.getLogger(__name__)
 start_router = Router()
 
 

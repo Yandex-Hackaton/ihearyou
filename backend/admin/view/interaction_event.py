@@ -1,5 +1,5 @@
-from data.models import InteractionEvent
 from admin.base import CustomModelView
+from data.models import InteractionEvent
 
 
 class InteractionEventView(CustomModelView, model=InteractionEvent):
@@ -20,7 +20,6 @@ class InteractionEventView(CustomModelView, model=InteractionEvent):
         InteractionEvent.id: "ID",
         InteractionEvent.event_type: "Тип события",
         InteractionEvent.user_id: "ID пользователя",
-        InteractionEvent.username: "Username",
         InteractionEvent.message_text: "Текст сообщения",
         InteractionEvent.callback_data: "Данные кнопки",
         InteractionEvent.created_at: "Дата и время",
@@ -30,7 +29,6 @@ class InteractionEventView(CustomModelView, model=InteractionEvent):
     column_list = [
         InteractionEvent.created_at,
         InteractionEvent.event_type,
-        InteractionEvent.username,
         InteractionEvent.user_id,
         InteractionEvent.message_text,
         InteractionEvent.callback_data,
@@ -41,7 +39,6 @@ class InteractionEventView(CustomModelView, model=InteractionEvent):
         InteractionEvent.id,
         InteractionEvent.event_type,
         InteractionEvent.user_id,
-        InteractionEvent.username,
         InteractionEvent.message_text,
         InteractionEvent.callback_data,
         InteractionEvent.created_at,
@@ -49,7 +46,6 @@ class InteractionEventView(CustomModelView, model=InteractionEvent):
 
     # Поля для поиска
     column_searchable_list = [
-        InteractionEvent.username,
         InteractionEvent.message_text,
         InteractionEvent.callback_data,
     ]
@@ -81,8 +77,6 @@ class InteractionEventView(CustomModelView, model=InteractionEvent):
     @staticmethod
     def format_user(model, attribute):
         """Форматирование пользователя."""
-        if model.username:
-            return f"@{model.username} ({model.user_id})"
         return f"ID: {model.user_id}"
 
     @staticmethod
