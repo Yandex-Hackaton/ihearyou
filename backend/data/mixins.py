@@ -14,7 +14,6 @@ class BaseIDMixin(SQLModel):
 class BaseInfoMixin(SQLModel):
     title: str = Field(
         sa_type=String(length=Length.TITLE_FIELD.value),
-        unique=True,
         nullable=False,
     )
     description: Optional[str] = Field(
