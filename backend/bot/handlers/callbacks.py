@@ -471,7 +471,7 @@ async def process_answer(message: Message, state: FSMContext):
     if not message.text:
         await message.answer("Пожалуйста, введите ответ текстом.")
         return
-
+    await state.set_state(UserStates.ANSWER)
     data = await state.get_data()
     question_id = data.get("question_id")
 
@@ -499,7 +499,7 @@ async def process_answer(message: Message, state: FSMContext):
         await session.commit()
     user_message = (
         "<b>✅ Ответ на ваш вопрос от "
-        f"{datetime.datetime.now().strftime('%d.%m.%Y %H:%M')}</b>\n\n"
+        f"{datetime.now().strftime('%d.%m.%Y %H:%M')}</b>\n\n"
         f"{message.text}"
     )
 
