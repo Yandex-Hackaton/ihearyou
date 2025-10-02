@@ -256,10 +256,9 @@ async def process_question(message: Message, state: FSMContext):
             # Формируем сообщение для админов
             admin_message = (
                 f"❓ <b>Новый вопрос #{new_question.id}</b>\n\n"
-                f"<b>От пользователя:</b> @{user.username} "
-                f"(ID: {user.telegram_id})\n"
-                f"<b>Текст вопроса:</b>\n{message.text}"
-                f"<i>Ссылка: {ADMIN_QUESTION_URL}{new_question.id}</i>"
+                f"<b>От пользователя:</b> @{user.username}\n\n"
+                f"<b>Текст вопроса:</b>\n{message.text}\n\n"
+                f'<a href="{ADMIN_QUESTION_URL}{new_question.id}">Перейти к вопросу</a>'
             )
             # Отправляем уведомление всем админам
             for admin_id in ADMINS:
