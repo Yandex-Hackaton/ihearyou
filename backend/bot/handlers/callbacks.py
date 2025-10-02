@@ -173,7 +173,7 @@ async def handle_go_to_main_menu_callback(
 
 @callback_router.callback_query(F.data.startswith("button:"))
 async def handle_button_callback(callback: CallbackQuery, state: FSMContext):
-    """Обработка callback для кнопок"""
+    """Обработка callback для кнопок контента."""
     try:
         callback_data = ButtonCallback.unpack(callback.data)
         logger.info(
@@ -190,7 +190,15 @@ async def handle_button_callback(callback: CallbackQuery, state: FSMContext):
                 logger.warning(f"Button not found: {callback_data.button_id}")
                 await callback.answer("❌ Кнопка не найдена", show_alert=True)
                 return
-
+            # 1. Увеличиваем счетчик просмотров
+            # Ваша модель называется Content, а поле views_count
+            button.views_count += 1
+            session.add(button)
+            await session.commit()
+            logger.info(
+                f"Updated views for content_id {button.id} "
+                f"to {button.views_count}"
+            )
             text = f"📌 {button.title}\n\n"
 
             if button.description:
@@ -232,8 +240,6 @@ async def handle_button_callback(callback: CallbackQuery, state: FSMContext):
                 reply_markup=keyboard,
                 disable_web_page_preview=True
             )
-
-            await callback.message.edit_text(text, reply_markup=keyboard)
 
         await callback.answer()
 
