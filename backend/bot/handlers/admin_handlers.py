@@ -23,7 +23,7 @@ from bot.services.question_service import QuestionService
 from bot.services.reminder_service import ReminderService
 from bot.urls import URLBuilder
 from bot.filters import Filters
-from bot.utils import safe_edit_message
+from bot.utils import safe_edit_message, safe_delete_and_send
 
 logger = getLogger(__name__)
 admin_router = Router()
@@ -154,7 +154,7 @@ async def handle_admin_manage_content(callback: CallbackQuery, state: FSMContext
         async with get_session() as session:
             keyboard = await AdminService.get_admin_main_menu_keyboard(session)
 
-            await safe_edit_message(
+            await safe_delete_and_send(
                 callback,
                 "🔧 <b>Управление контентом</b>\n\n"
                 "Выберите категорию для управления контентом:",
@@ -193,8 +193,7 @@ async def handle_admin_category_selection(callback: CallbackQuery, state: FSMCon
                 f"📂 <b>{category.title}</b>\n\n"
                 "Выберите контент для управления:"
             )
-            
-            await safe_edit_message(
+            await safe_delete_and_send(
                 callback,
                 text,
                 reply_markup=keyboard,
@@ -252,8 +251,7 @@ async def handle_admin_content_selection(callback: CallbackQuery, state: FSMCont
                 f"📄 <b>{content.title}</b>\n\n"
                 "Что хотите сделать с этим контентом?"
             )
-            
-            await safe_edit_message(
+            await safe_delete_and_send(
                 callback,
                 text,
                 reply_markup=builder.as_markup(),

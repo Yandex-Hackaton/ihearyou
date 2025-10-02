@@ -8,7 +8,6 @@ async def safe_edit_message(
     parse_mode="HTML",
     disable_web_page_preview=True
 ):
-
     if callback.message.photo:
         # Если есть фото, редактируем caption
         await callback.message.edit_caption(
