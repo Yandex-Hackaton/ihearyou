@@ -129,10 +129,10 @@ class ContentView(CustomModelView, model=Content):
             }
 
         total = len(ratings)
-        helpful = sum(1 for r in ratings if r.is_helpful)
-        not_helpful = sum(1 for r in ratings if r.is_not_helpful)
+        helpful = sum(1 for r in ratings if r.is_helpful is True)
+        not_helpful = sum(1 for r in ratings if r.is_helpful is False)
         ratings_with_value = [
-            r.rating for r in ratings if r.rating is not None
+            r.score for r in ratings if r.score is not None
         ]
         avg_rating = (
             sum(ratings_with_value) / len(ratings_with_value)

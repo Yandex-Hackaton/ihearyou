@@ -1,5 +1,5 @@
-from data.models import InteractionEvent
 from admin.base import CustomModelView
+from data.models import InteractionEvent
 
 
 class InteractionEventView(CustomModelView, model=InteractionEvent):

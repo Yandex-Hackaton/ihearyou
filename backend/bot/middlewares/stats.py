@@ -4,10 +4,10 @@ from typing import Any, Awaitable, Callable
 from aiogram import BaseMiddleware
 from aiogram.enums import UpdateType
 from aiogram.types import CallbackQuery, Message, TelegramObject
-from db_handler.service import InteractionEventService
 
 from data.db import async_session
 from data.models import InteractionEvent
+from db_handler.service import InteractionEventService
 
 logger = getLogger(__name__)
 
