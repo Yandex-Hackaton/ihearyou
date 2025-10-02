@@ -410,10 +410,10 @@ async def handle_feedback_callback(
                     reply_markup=builder.as_markup()
                 )
 
-            await callback.answer(
-                "Спасибо за обратную связь!",
-                show_alert=False
-            )
+            # await callback.answer(
+            #     "Спасибо за обратную связь!",
+            #     show_alert=False
+            # )
 
     except Exception as e:
         logger.exception(
@@ -441,16 +441,14 @@ async def handle_rating_callback(
         content_id = callback_data.content_id
         rating = callback_data.rating
 
-        logger.info(f"User {user_id} rated content {content_id} with {rating}.")
-
-        # Редактируем сообщение: изменяем текст и убираем клавиатуру
+        logger.info(
+            f"User {user_id} rated content {content_id} with {rating}."
+        )
         await callback.message.edit_text(
             text="Спасибо за обратную связь!",
-            reply_markup=None  # Убирает клавиатуру
+            reply_markup=None
         )
         await callback.answer()
-
-        # Сбрасываем состояние пользователя
         await state.clear()
 
     except Exception as e:
