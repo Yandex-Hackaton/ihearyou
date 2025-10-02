@@ -5,7 +5,7 @@
             {
                 "telegram_id": 1325303159,
                 "username": "admin",
-                "password": "admin",
+                "password": "noadmin",
                 "is_active": true,
                 "is_admin": true
             },
