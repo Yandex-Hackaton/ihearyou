@@ -46,7 +46,11 @@ class QuestionView(CustomModelView, model=Question):
     ]
 
     def list_query(self, request: Request):
-        return super().list_query(request).options(selectinload(Question.user))
+        result = (
+            super().list_query(request)
+            .options(selectinload(Question.user))
+            .order_by(Question.created_at.desc()))
+        return result
 
     def details_query(self, request: Request):
         return super().details_query(request).options(

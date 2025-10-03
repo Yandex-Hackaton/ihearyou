@@ -12,6 +12,9 @@
 - [**BIXBER**](https://github.com/orgs/Yandex-Hackaton/people/BIXBER) - Backend Developer
 - [**Reagent992**](https://github.com/orgs/Yandex-Hackaton/people/Reagent992) - Backend Developer
 
+### Frontend Team
+- [**ermoshenk0kirill**](https://github.com/orgs/Yandex-Hackaton/people/ermoshenk0kirill) - Frontend Developer
+
 ## Системные требования
 
 - Docker Engine 20.10+
@@ -155,3 +158,15 @@ docker compose logs bot
 - **SQLAlchemy 2.0.23** - низкоуровневая работа с БД
 - **PostgreSQL** - основная база данных
 - **AsyncPG** - асинхронный драйвер PostgreSQL
+
+## Frontend Architecture
+
+### Tech Stack
+- **HTML5** - основной язык разметки веб-страниц
+- **CSS3** - стилизация веб-страниц
+- **JavaScript** - динамическая функциональность веб-страниц
+- **Bootstrap** - CSS-фреймворк для создания веб-интерфейса
+- **FontAwesome** - иконки для веб-страниц
+- **Tabler** - CSS-фреймворк для создания веб-интерфейса
+- **Google Fonts** - шрифты для веб-страниц
+- **Select2** - плагин для выбора значений в выпадающих списках

@@ -233,7 +233,7 @@ async def handle_admin_content_selection(callback: CallbackQuery, state: FSMCont
                 ).pack()
             )
             builder.button(
-                text="📷 Изменить изображение",
+                text="📷 Добавить/Изменить изображение",
                 callback_data=AdminContentActionCallback(
                     action="upload_image",
                     content_id=content_id

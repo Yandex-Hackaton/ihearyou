@@ -3,9 +3,13 @@ from aiogram.types import CallbackQuery, InputMediaPhoto
 from aiogram.utils.keyboard import InlineKeyboardBuilder
 
 from data.models import Content
-from utils.url_utils import clean_url, is_valid_image_url
 from bot.keyboards.callbacks import AdminContentCallback
-from bot.utils import safe_edit_message, format_description_with_breaks
+from bot.utils import (
+    clean_url,
+    is_valid_image_url,
+    safe_edit_message,
+    format_description_with_breaks
+)
 
 logger = getLogger(__name__)
 

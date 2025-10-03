@@ -4,7 +4,14 @@
 <div class="col-12">
   <div class="card">
     <div class="card-header">
-      <h3 class="card-title">New {{ model_view.name }}</h3>
+      <h3 class="card-title">
+        <!-- New {{ model_view.name }} -->
+        {% if model_view.name == "Контент" %}
+        Новый {{ model_view.name }}
+        {% else %}
+        Новая {{ model_view.name }}
+        {% endif %}
+      </h3>
     </div>
     <div class="card-body border-bottom py-3">
       <form action="{{ url_for('admin:create', identity=model_view.identity) }}" method="POST"
@@ -20,14 +27,14 @@
         <div class="row">
           <div class="col-md-2">
             <a href="{{ url_for('admin:list', identity=model_view.identity) }}" class="btn">
-              Cancel
+              Закрыть
             </a>
           </div>
           <div class="col-md-6">
             <div class="btn-group flex-wrap" data-toggle="buttons">
-              <input type="submit" name="save" value="Save" class="btn">
-              <input type="submit" name="save" value="Save and continue editing" class="btn">
-              <input type="submit" name="save" value="Save and add another" class="btn">
+              <input type="submit" name="save" value="Сохранить" class="btn">
+              <input type="submit" name="save" value="Сохранить и продолжить редактирование" class="btn">
+              <input type="submit" name="save" value="Сохранить и добавить еще" class="btn">
             </div>
           </div>
         </div>

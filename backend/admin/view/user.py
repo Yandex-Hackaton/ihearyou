@@ -11,7 +11,7 @@ class UserView(CustomModelView, model=User):
 
     # Разрешённые действия с моделью
     can_create = False
-    can_edit = True
+    can_edit = False
     can_delete = False
 
     # Названия полей
@@ -26,7 +26,6 @@ class UserView(CustomModelView, model=User):
     # Выводимые поля на страницу списка
     column_list = [
         User.username,
-        User.is_admin,
         User.telegram_id,
         User.is_active,
         User.registered_at,
@@ -41,8 +40,6 @@ class UserView(CustomModelView, model=User):
         User.registered_at,
     ]
 
-    # Поля доступные для изменений
-    form_columns = ["is_active"]
     column_sortable_list = [User.registered_at, User.is_active]
     column_filters = [
         BooleanFilter(User.is_active, "Доступен"),
