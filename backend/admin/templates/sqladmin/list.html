@@ -16,7 +16,7 @@
                 <div class="ms-3 d-inline-block dropdown">
                   <a href="#" class="btn btn-secondary dropdown-toggle" id="dropdownMenuButton1" data-bs-toggle="dropdown"
                     aria-expanded="false">
-                    Export
+                    Экспорт
                   </a>
                   <ul class="dropdown-menu" aria-labelledby="dropdownMenuButton1">
                     {% for export_type in model_view.export_types %}
@@ -38,7 +38,12 @@
                 {% if model_view.can_create %}
                 <div class="ms-3 d-inline-block">
                   <a href="{{ url_for('admin:create', identity=model_view.identity) }}" class="btn btn-primary">
-                    + New {{ model_view.name }}
+                    <!-- + New {{ model_view.name }} -->
+                    {% if model_view.name == "Контент" %}
+                    + Новый {{ model_view.name }}
+                    {% else %}
+                    + Новая {{ model_view.name }}
+                    {% endif %}
                   </a>
                 </div>
                 {% endif %}
@@ -170,9 +175,9 @@
               </table>
             </div>
             <div class="card-footer d-flex justify-content-between align-items-center gap-2">
-              <p class="m-0 text-muted">Showing <span>{{ ((pagination.page - 1) * pagination.page_size) + 1 }}</span> to
-                <span>{{ min(pagination.page * pagination.page_size, pagination.count) }}</span> of <span>{{ pagination.count
-                  }}</span> items
+              <p class="m-0 text-muted">Показано с <span>{{ ((pagination.page - 1) * pagination.page_size) + 1 }}</span> по
+                <span>{{ min(pagination.page * pagination.page_size, pagination.count) }}</span> из <span>{{ pagination.count
+                  }}</span> элементов
               </p>
               <ul class="pagination m-0 ms-auto">
                 <li class="page-item {% if not pagination.has_previous %}disabled{% endif %}">

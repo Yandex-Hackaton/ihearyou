@@ -4,9 +4,9 @@ from decouple import config
 
 @dataclass
 class AdminConfig:
-    TITLE: str = 'IHearYou Admin Panel'
+    TITLE: str = 'Я тебя слышу'
     VERSION: str = '1.0.0'
-    ADMIN_TITLE: str = 'IHearYou Admin'
+    ADMIN_TITLE: str = 'Я тебя слышу'
 
     # Секретный ключ для сессий
     SESSION_SECRET_KEY: str = config(
