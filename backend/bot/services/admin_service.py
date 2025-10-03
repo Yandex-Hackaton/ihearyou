@@ -57,7 +57,7 @@ class AdminService:
             query = select(Content).where(
                 Content.category_id == category_id,
                 Content.is_active
-            )
+            ).order_by(Content.views_count.desc())
             result = await session.execute(query)
             buttons = result.scalars().all()
 
