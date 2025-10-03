@@ -1,6 +1,8 @@
 from data.models import Category
 from admin.base import CustomModelView
 
+from enums.fields import ViewLimits
+
 
 class CategoryView(CustomModelView, model=Category):
     name = "Категория"
@@ -40,9 +42,20 @@ class CategoryView(CustomModelView, model=Category):
     ]
 
     @staticmethod
-    def format_datetime(model, attribute):
+    def format_datetime(model: Category, attribute) -> str:
         return model.created_at.strftime("%d.%m.%Y %H:%M")
 
-    column_formatters = {Category.created_at: format_datetime}
+    @staticmethod
+    def truncate_description(model: Category, attribute) -> str:
+        text = model.description or ""
+        return (
+            (text[:ViewLimits.TEXT_FIELD.value] + "…")
+            if len(text) > ViewLimits.TEXT_FIELD.value else text
+        )
+
+    column_formatters = {
+        Category.created_at: format_datetime,
+        Category.description: truncate_description,
+    }
 
     column_formatters_detail = {Category.created_at: format_datetime}

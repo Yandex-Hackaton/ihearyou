@@ -4,6 +4,17 @@
 
 Проект IHearYou - это Telegram-бот с админ-панелью для предоставления информации о нарушениях слуха. Система состоит из Telegram-бота на базе Aiogram, веб-админки на FastAPI с SQLAdmin и PostgreSQL базы данных.
 
+## Команда разработчиков
+
+### Backend Team
+- [**stepaxvii**](https://github.com/orgs/Yandex-Hackaton/people/stepaxvii) - Lead Backend Developer
+- [**Enigmatica33**](https://github.com/orgs/Yandex-Hackaton/people/Enigmatica33) - Backend Developer
+- [**BIXBER**](https://github.com/orgs/Yandex-Hackaton/people/BIXBER) - Backend Developer
+- [**Reagent992**](https://github.com/orgs/Yandex-Hackaton/people/Reagent992) - Backend Developer
+
+### Frontend Team
+- [**ermoshenk0kirill**](https://github.com/orgs/Yandex-Hackaton/people/ermoshenk0kirill) - Frontend Developer
+
 ## Системные требования
 
 - Docker Engine 20.10+
@@ -105,7 +116,7 @@ docker compose logs bot
 1. Откройте админ-панель по адресу http://localhost:8000
 2. Войдите с учетными данными по умолчанию:
    - Username: `admin`
-   - Password: `admin`
+   - Password: `noadmin`
 3. Смените пароль администратора в разделе "Пользователи"
 4. Добавьте категории и контент через интерфейс админки
 
@@ -137,105 +148,25 @@ docker compose logs bot
 
 - `postgres_data`: постоянное хранение данных PostgreSQL
 
-## Управление системой
+## Backend Architecture
 
-### Полезные команды Docker Compose
+### Tech Stack
+- **Python 3.12+** - основной язык разработки
+- **Aiogram 3.2.0** - Telegram Bot API framework
+- **FastAPI 0.104.0** - веб-фреймворк для админки
+- **SQLModel 0.0.14** - ORM с типизацией
+- **SQLAlchemy 2.0.23** - низкоуровневая работа с БД
+- **PostgreSQL** - основная база данных
+- **AsyncPG** - асинхронный драйвер PostgreSQL
 
-```bash
-# Пересборка образов
-docker compose build
+## Frontend Architecture
 
-# Перезапуск конкретного сервиса
-docker compose restart admin
-
-# Просмотр логов конкретного сервиса
-docker compose logs bot
-
-# Выполнение команд в контейнере
-docker compose exec postgres psql -U postgres -d ihearyou
-
-# Остановка с удалением volumes (ВНИМАНИЕ: удалит данные БД)
-docker compose down -v
-```
-
-### Бэкап базы данных
-
-```bash
-# Создание бэкапа
-docker compose exec postgres pg_dump -U postgres ihearyou > backup.sql
-
-# Восстановление из бэкапа
-docker compose exec -T postgres psql -U postgres ihearyou < backup.sql
-```
-
-## Мониторинг и отладка
-
-### Логи системы
-
-Логи сохраняются в контейнерах и доступны через:
-
-```bash
-# Все логи
-docker compose logs
-
-# Последние 100 строк
-docker compose logs --tail=100
-
-# Логи с временными метками
-docker compose logs -t
-```
-
-
-## Устранение неполадок
-
-### Частые проблемы
-
-**Проблема**: Контейнеры не запускаются
-```bash
-# Проверьте логи
-docker compose logs
-
-# Проверьте доступность портов
-netstat -tulpn | grep :8000
-netstat -tulpn | grep :5432
-```
-
-**Проблема**: PostgreSQL не подключается
-```bash
-# Проверьте health check
-docker compose ps postgres
-
-# Проверьте логи PostgreSQL
-docker compose logs postgres
-
-# Перезапустите с очисткой
-docker compose down
-docker compose up -d postgres
-```
-
-**Проблема**: Бот не отвечает
-```bash
-# Проверьте токен бота
-docker compose logs bot
-
-# Проверьте подключение к БД из бота
-docker compose exec bot poetry run python -c "
-from data.db import engine
-print('Bot DB connection test')
-"
-```
-
-## Обновление системы
-
-```bash
-# Остановка сервисов
-docker compose down
-
-# Получение обновлений
-git pull origin develop
-
-# Пересборка и запуск
-docker compose build
-docker compose up -d
-```
-```
+### Tech Stack
+- **HTML5** - основной язык разметки веб-страниц
+- **CSS3** - стилизация веб-страниц
+- **JavaScript** - динамическая функциональность веб-страниц
+- **Bootstrap** - CSS-фреймворк для создания веб-интерфейса
+- **FontAwesome** - иконки для веб-страниц
+- **Tabler** - CSS-фреймворк для создания веб-интерфейса
+- **Google Fonts** - шрифты для веб-страниц
+- **Select2** - плагин для выбора значений в выпадающих списках

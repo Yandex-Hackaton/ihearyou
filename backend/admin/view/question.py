@@ -1,9 +1,12 @@
-from starlette.requests import Request
-from sqlalchemy.orm import selectinload
+import logging
 
-from data.models import Question
+from sqlalchemy.orm import selectinload
+from starlette.requests import Request
+
 from admin.base import CustomModelView
-from utils.logger import logger
+from data.models import Question
+
+logger = logging.getLogger(__name__)
 
 
 class QuestionView(CustomModelView, model=Question):
@@ -13,13 +16,14 @@ class QuestionView(CustomModelView, model=Question):
 
     # Разрешённые действия с моделью
     can_create = False
-    can_edit = True
+    can_edit = False
     can_delete = False
 
     # Название полей
     column_labels = {
         Question.id: "ID",
         Question.text: "Вопрос",
+        Question.answer_text: "Ответ",
         Question.user: "Пользователь",
         Question.created_at: "Дата и время получения вопроса",
     }
@@ -36,28 +40,25 @@ class QuestionView(CustomModelView, model=Question):
     column_details_list = [
         Question.id,
         Question.text,
-        Question.answer,
+        Question.answer_text,
         Question.created_at,
         Question.user,
-    ]
-
-    # Поля доступные для изменений
-    form_columns = [
-        "answer",
     ]
 
     def list_query(self, request: Request):
         return super().list_query(request).options(selectinload(Question.user))
 
     def details_query(self, request: Request):
-        return super().details_query(request).options(selectinload(Question.user))
+        return super().details_query(request).options(
+            selectinload(Question.user)
+        )
 
     @staticmethod
-    def format_user(model, attribute):
+    def format_user(model: Question, attribute) -> str:
         return model.user.username if model.user else "Неизвестно"
 
     @staticmethod
-    def format_datetime(model, attribute):
+    def format_datetime(model: Question, attribute) -> str:
         return model.created_at.strftime("%d.%m.%Y %H:%M")
 
     column_formatters = {

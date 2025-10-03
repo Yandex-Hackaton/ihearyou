@@ -17,7 +17,3 @@ class AdminConfig:
         'SESSION_COOKIE_NAME',
         default='admin_session',
     )
-
-    # Настройки UI
-    PAGE_SIZE: int = 20
-    MAX_PAGE_SIZE: int = 100

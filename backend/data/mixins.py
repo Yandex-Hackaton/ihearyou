@@ -4,20 +4,19 @@ from datetime import datetime, timedelta
 from sqlalchemy import DateTime, String, Text
 from sqlmodel import Field, SQLModel
 
-from .constants import (
-    TITLE_FIELD_MX_LEN,
-    DESC_FIELD_MX_LEN,
-)
+from enums.fields import Length
 
+
+class BaseIDMixin(SQLModel):
+    id: int = Field(primary_key=True)
 
 class BaseInfoMixin(SQLModel):
     title: str = Field(
-        sa_type=String(length=TITLE_FIELD_MX_LEN),
-        unique=True,
+        sa_type=String(length=Length.TITLE_FIELD.value),
         nullable=False,
     )
     description: Optional[str] = Field(
-        sa_type=Text(length=DESC_FIELD_MX_LEN),
+        sa_type=Text(),
     )
 
 

@@ -1,20 +1,24 @@
-"""Инициализация и запуск Telegram бота."""
-
 import asyncio
+from logging import getLogger
+from typing import cast
 
 from aiogram import Bot, Dispatcher
 from aiogram.fsm.storage.memory import MemoryStorage
 from decouple import config
 
-from .handlers.start import start_router
-from .handlers.callbacks import callback_router
-from .middlewares.stats import InteractionEventMiddleware
+from bot.handlers.callbacks import callback_router
+from bot.handlers.start import start_router
+from bot.middlewares.stats import InteractionEventMiddleware
+from bot.middlewares.users import TrackNewUserMiddleware
 from data.db import create_db_and_tables
-from utils.logger import logger
+from utils.logger import setup_logger
 
 # Инициализация бота и диспетчера
-bot = Bot(token=config("BOT_TOKEN"))
+bot = Bot(token=cast(str, config("BOT_TOKEN")))
 dp = Dispatcher(storage=MemoryStorage())
+
+setup_logger()
+logger = getLogger("bot.app")
 
 
 def setup_middlewares():
@@ -22,11 +26,13 @@ def setup_middlewares():
     # Подключаем middleware для отслеживания событий
     dp.message.middleware(InteractionEventMiddleware())
     dp.callback_query.middleware(InteractionEventMiddleware())
+    dp.message.middleware(TrackNewUserMiddleware())
     logger.info("Middleware подключены")
 
 
 async def main():
     """Главная функция запуска бота."""
+
     logger.info("Starting bot...")
 
     # Создаем таблицы в БД (включая таблицу статистики)
