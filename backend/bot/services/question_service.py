@@ -1,5 +1,5 @@
-from datetime import datetime
 from logging import getLogger
+
 from aiogram.types import Message, User
 from aiogram.fsm.context import FSMContext
 from sqlalchemy import select
@@ -99,7 +99,7 @@ class QuestionService:
 
         user_message = (
             "<b>✅ Ответ на ваш вопрос от "
-            f"{datetime.now().strftime('%d.%m.%Y %H:%M')}</b>\n\n"
+            f"{question.created_at.strftime('%d.%m.%Y %H:%M')}</b>\n\n"
             f"{message.text}"
         )
 
