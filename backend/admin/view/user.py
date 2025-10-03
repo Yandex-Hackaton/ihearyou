@@ -26,7 +26,6 @@ class UserView(CustomModelView, model=User):
     # Выводимые поля на страницу списка
     column_list = [
         User.username,
-        User.is_admin,
         User.telegram_id,
         User.is_active,
         User.registered_at,
