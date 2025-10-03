@@ -3,6 +3,7 @@ from typing import Any
 
 from aiogram.types import Message, PhotoSize
 
+from bot.config import ImageSettings
 
 class ValidationError(Exception):
     """Ошибка валидации."""
@@ -31,12 +32,12 @@ class Validator:
 
 
 class ImageValidator(Validator):
-    def __init__(self, max_size: int = 20 * 1024 * 1024,  # 20MB
-                 allowed_formats: list[str] = None):
-        self.max_size = max_size
-        self.allowed_formats = (
-            allowed_formats or ['jpg', 'jpeg', 'png', 'gif', 'webp']
-        )
+    def __init__(
+            self, max_size: int = ImageSettings.MAX_FILE_SIZE,
+            allowed_formats: list[str] = ImageSettings.ALLOWED_FORMATS
+        ):
+            self.max_size = max_size
+            self.allowed_formats = allowed_formats
 
     def validate(self, value: Any) -> ValidationResult:
         result = ValidationResult(True)
@@ -65,13 +66,6 @@ def validate_photo(message: Message, validator: Validator) -> ValidationResult:
         )
 
     return validator.validate(message.photo[-1])
-
-
-class BotValidators:
-    ADMIN_IMAGE = ImageValidator(
-        max_size=10 * 1024 * 1024,
-        allowed_formats=['jpg', 'jpeg', 'png']
-    )
 
 
 def format_description_with_breaks(description: str) -> str:

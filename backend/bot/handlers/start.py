@@ -12,7 +12,6 @@ from bot.keyboards.main_menu import (
 )
 from bot.config import ADMINS
 from bot.keyboards.callbacks import UserStates
-from bot.urls import URLBuilder
 from data.db import get_session
 
 logger = logging.getLogger(__name__)
@@ -66,14 +65,3 @@ async def cmd_help(message: Message):
     )
 
 
-@start_router.message(lambda message: message.text == "🗒 Полезные материалы")
-async def handle_useful_materials(message: Message):
-    """Обработчик кнопки 'Полезные материалы'"""
-    logger.info(f"Useful materials requested: {message.from_user.id}")
-
-    text = URLBuilder.get_useful_materials_text()
-    await message.answer(
-        text,
-        parse_mode="HTML",
-        disable_web_page_preview=True
-    )

@@ -7,6 +7,7 @@ from sqlmodel import select
 from data.db import get_session
 from data.models import Content, Category
 from data.queries import get_button_by_id
+from bot.config import ImageSettings
 from bot.keyboards.callbacks import (
     AdminCallback,
     AdminCategoryCallback,
@@ -18,8 +19,7 @@ from bot.utils import (
     clean_url,
     is_valid_image_url,
     safe_edit_message,
-    validate_photo,
-    BotValidators
+    validate_photo
 )
 
 logger = getLogger(__name__)
@@ -107,7 +107,7 @@ class AdminService:
     async def process_image_upload(message, state: FSMContext, content_id: int):
         """Обрабатывает загруженное изображение."""
         # Валидация изображения
-        validation_result = validate_photo(message, BotValidators.ADMIN_IMAGE)
+        validation_result = validate_photo(message, ImageSettings.MAX_FILE_SIZE)
         if not validation_result.is_valid:
             await message.answer(f"❌ {validation_result.errors[0]}")
             return

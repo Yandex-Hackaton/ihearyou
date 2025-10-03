@@ -5,7 +5,6 @@ from .validators import (
     Validator,
     ImageValidator,
     validate_photo,
-    BotValidators,
     format_description_with_breaks
 )
 from .url_utils import clean_url, is_valid_image_url
@@ -20,6 +19,5 @@ __all__ = [
     'Validator',
     'ImageValidator',
     'validate_photo',
-    'BotValidators',
     'format_description_with_breaks'
 ]

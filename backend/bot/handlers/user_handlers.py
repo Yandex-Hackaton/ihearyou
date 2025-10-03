@@ -11,7 +11,7 @@ from data.queries import (
     get_or_create_user,
 )
 from bot.config import ADMINS
-from bot.urls import URLs
+from bot.urls import URLs, URLBuilder
 from bot.keyboards.callbacks import (
     CategoryCallback,
     ButtonCallback,
@@ -174,6 +174,7 @@ async def show_categories(message: Message, state: FSMContext):
             "Выберите интересующую вас категорию:",
             reply_markup=inline_keyboard
         )
+    await message.delete()
 
 
 @user_router.message(Filters.QUESTION_BUTTON)
@@ -187,6 +188,7 @@ async def ask_question_start(message: Message, state: FSMContext):
         "Напишите свой вопрос, и мы передадим его администратору. "
         "В ближайшее время вы получите ответ."
     )
+    await message.delete()
 
 
 @user_router.message(UserStates.QUESTION)
@@ -225,6 +227,21 @@ async def help_request(message: Message):
         "Мы направили в поддержку обращение, "
         "скоро с вами свяжется администратор."
     )
+    await message.delete()
+
+
+@user_router.message(Filters.MATERIALS_BUTTON)
+async def handle_useful_materials(message: Message):
+    """Обработчик кнопки 'Полезные материалы'"""
+    logger.info(f"Useful materials requested: {message.from_user.id}")
+
+    text = URLBuilder.get_useful_materials_text()
+    await message.answer(
+        text,
+        parse_mode="HTML",
+        disable_web_page_preview=True
+    )
+    await message.delete()
 
 
 @user_router.callback_query(FeedbackCallback.filter())
