@@ -47,3 +47,4 @@ class RatingService:
         session.add(rating_obj)
         await session.commit()
         return rating_obj
+
