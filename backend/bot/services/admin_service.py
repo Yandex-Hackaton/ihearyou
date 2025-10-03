@@ -14,8 +14,13 @@ from bot.keyboards.callbacks import (
     UserStates
 )
 from bot.urls import URLBuilder
-from utils.url_utils import clean_url, is_valid_image_url
-from bot.utils import safe_edit_message, validate_photo, BotValidators
+from bot.utils import (
+    clean_url,
+    is_valid_image_url,
+    safe_edit_message,
+    validate_photo,
+    BotValidators
+)
 
 logger = getLogger(__name__)
 
