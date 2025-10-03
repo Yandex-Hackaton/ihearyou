@@ -8,7 +8,7 @@ from enums.fields import ViewLimits, Formats
 
 class ContentView(CustomModelView, model=Content):
     name = "Контент"
-    name_plural = "Контенты"
+    name_plural = "Контент"
     icon = "fa-solid fa-file-lines"
 
     # Названия полей
