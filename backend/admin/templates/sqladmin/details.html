@@ -50,7 +50,7 @@
       <div class="card-footer container">
         <div class="row">
           <div class="col-md-1">
-            <a href="{{ url_for('admin:list', identity=model_view.identity) }}" class="btn btn-secondary btn-custom">
+            <a href="{{ url_for('admin:list', identity=model_view.identity) }}" class="btn">
               Назад
             </a>
           </div>
@@ -58,14 +58,14 @@
           <div class="col-md-1">
             <a href="#" data-name="{{ model_view.name }}" data-pk="{{ get_object_identifier(model) }}"
               data-url="{{ model_view._url_for_delete(request, model) }}" data-bs-toggle="modal"
-              data-bs-target="#modal-delete" class="btn btn-danger  btn-custom">
+              data-bs-target="#modal-delete" class="btn">
               Удалить
             </a>
           </div>
           {% endif %}
           {% if model_view.can_edit %}
           <div class="col-md-1">
-            <a href="{{ model_view._build_url_for('admin:edit', request, model) }}" class="btn btn-primary btn-custom">
+            <a href="{{ model_view._build_url_for('admin:edit', request, model) }}" class="btn">
               Изменить
             </a>
           </div>
